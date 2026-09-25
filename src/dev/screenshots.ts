@@ -34,6 +34,8 @@ async function capture(overlay: KeyboardOverlay, path: string): Promise<void> {
 export async function captureLayers(overlay: KeyboardOverlay, layout: Layout, dir: string): Promise<void> {
     GLib.mkdir_with_parents(dir, 0o755);
     overlay.setVisible(true);
+    const [x, y] = overlay.actor.get_position();
+    console.log(`[zsa-helper] overlay at ${x},${y} (stage ${global.stage.width}x${global.stage.height})`);
     for (const layer of layout.layers) {
         overlay.showLayer(layer.index);
         await wait(400);

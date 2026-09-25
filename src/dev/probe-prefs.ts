@@ -60,6 +60,7 @@ app.connect('activate', () => {
         settings.set_boolean('hud-enabled', false);
         settings.set_string('position', 'custom');
         settings.set_boolean('allow-dragging', true);
+        settings.set_string('monitor', 'HDMI-9');
         settings.set_double('scale', 1.4);
         settings.set_strv('toggle-overlay', ['<Control><Shift>F12']);
         GLib.timeout_add(GLib.PRIORITY_DEFAULT, 400, () => {
