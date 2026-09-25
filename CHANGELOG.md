@@ -7,6 +7,30 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-25
+
+First complete version.
+
+### Added
+
+- `pnpm zip` packs the extension, without development files, into
+  `build/zsa-helper@ajmasia.shell-extension.zip`.
+- `pnpm run install:local --zip` installs the packed extension. It removes a development symlink
+  first, so the installer never deletes through it into `dist/`.
+- `ZSA_HELPER_DEBUG=1` logs how long each layer change takes to reach the screen.
+- Full README with features, installation, usage, troubleshooting and screenshots.
+
+### Changed
+
+- The overlay looks like a libadwaita window: window background, 15px radius, a subtle outline and
+  a barely visible shadow instead of a dark halo.
+- Keys are flat, without the inset shadow.
+
+### Fixed
+
+- The nested shell (`pnpm nested`, `pnpm smoke`) always loads the extension from `dist/`, never
+  from the copy installed for the user.
+
 ## [0.0.6] - 2026-09-25
 
 ### Added
