@@ -7,6 +7,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-09-25
+
+### Fixed
+
+- An error in an event listener no longer drops the keyboard connection. Listeners are isolated:
+  the error is logged and shown in *Status*, and the other listeners still run. Before, the error
+  reached the device read loop, which took it for a disconnection and could loop reconnecting.
+- If Mutter cannot list the monitors, the extension retries (after 1, 3 and 10 seconds) and shows
+  the problem in *Status* until it works again.
+
 ## [0.4.0] - 2026-09-25
 
 ### Added
