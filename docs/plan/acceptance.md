@@ -96,3 +96,26 @@ mostrar la base antes de desaparecer.
 | Captura y restauración del atajo | ✅ validado por el usuario |
 | Controles → ajustes aplicados en caliente | ✅ validado por el usuario |
 | Refrescar layout | ✅ validado por el usuario |
+
+## v0.1.0: Phase 7 (MVP, validación final en la sesión real)
+
+**Fecha:** 2026-09-25
+**Resultado:** ⏳ pendiente de la validación del usuario en la sesión real
+
+Instalación validada: `pnpm zip` → zip sin `dev/` → `gnome-extensions install` (compila el
+esquema) → `pnpm smoke` contra esa instalación: ACTIVE, INACTIVE y 0 fds de hidraw.
+
+| # | Criterio del PRD | Estado | Notas |
+|---|---|---|---|
+| 1 | La capa cambia en < 100 ms sin tirones | ⏳ | Medir con `ZSA_HELPER_DEBUG=1 pnpm nested` (log `painted in N ms`) |
+| 2 | El atajo funciona desde cualquier app y no roba el foco | ⏳ | Validado en la Shell anidada (fase 5); falta la sesión real |
+| 3 | Sin barra de título; fuera de Alt+Tab, actividades y dock | ⏳ | Actor de chrome, no una ventana; confirmar a la vista |
+| 4 | El HUD muestra la capa al mantener y la oculta tras el retardo | ⏳ | Validado en la Shell anidada (fase 5) |
+| 5 | El resaltado coincide con la posición física | ✅ | Mapeo 260/260 contra el `keymap.c` compilado (test) y pulsaciones reales (fase 3) |
+| 6 | Transparentes atenuadas y etiquetas propias intactas | ✅ | Tests de etiquetas y capturas de la fase 5 |
+| 7 | Recuperación tras desconectar o suspender | ⏳ | Validado con `probe:device` (fase 3); falta con la extensión en la sesión real |
+| 8 | Revisión nueva flasheada → se muestra sola; sin red, la caché | ⏳ | Caché y respaldo validados (fase 4); falta un flasheo real |
+| 9 | Keymapp sigue funcionando a la vez | ⏳ | Validado con `probe:device` (fase 3) |
+| 10 | Desactivar no deja restos | ✅ | `pnpm smoke`: INACTIVE y 0 fds de hidraw; keybinding y actor liberados en `disable()` |
+| 11 | Los tests de Vitest pasan | ✅ | 62 tests |
+| — | Pantalla completa y varios monitores | ⏳ | El overlay sigue al monitor principal |

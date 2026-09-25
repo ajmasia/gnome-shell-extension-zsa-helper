@@ -2,9 +2,9 @@
 
 **Goal:** la extensión se instala de forma reproducible en la sesión real y cumple los 11 criterios
 de éxito del PRD. Esta fase publica la versión **0.1.0** (MVP).
-**Verification:** `pnpm build && pnpm test && pnpm run pack && gnome-extensions install --force dist/zsa-helper@ajmasia.shell-extension.zip`,
+**Verification:** `pnpm test && pnpm typecheck && pnpm zip && pnpm run install:local --zip`,
 cerrar sesión, volver a entrar, `gnome-extensions enable zsa-helper@ajmasia` y repasar
-`docs/plan/acceptance.md` con todos los criterios en ✅.
+`docs/plan/acceptance.md` hasta tener todos los criterios en ✅.
 **Dependencies:** Phases 1–6.
 
 ## Contexto
@@ -13,6 +13,19 @@ cerrar sesión, volver a entrar, `gnome-extensions enable zsa-helper@ajmasia` y 
 - `gnome-extensions pack` necesita `extension.js`, `metadata.json`, `prefs.js`, `stylesheet.css`
   y `schemas/` en la raíz del directorio fuente, con el resto como `--extra-source`.
 - Hay que excluir `dist/dev/` (sondas) del paquete.
+
+## Notas de implementación
+
+- El script se llama `pnpm zip`, no `pack`: `pnpm pack` es un comando integrado de pnpm (genera un
+  tarball de npm).
+- `gnome-extensions install` extrae en `~/.cache` y mueve a `XDG_DATA_HOME`. Si están en sistemas
+  de ficheros distintos falla con *"Can't recursively copy directory"*. En la instalación real
+  ambos están en `/`; para probar con un `XDG_DATA_HOME` temporal hay que apuntar también
+  `XDG_CACHE_HOME` al mismo sistema de ficheros.
+- `install:local --zip` borra antes el enlace simbólico de desarrollo, para que el instalador nunca
+  borre a través de él el contenido de `dist/`.
+- La latencia se mide con `ZSA_HELPER_DEBUG`: desde el evento de capa hasta el siguiente
+  `after-paint` del stage.
 
 ## Tasks
 
