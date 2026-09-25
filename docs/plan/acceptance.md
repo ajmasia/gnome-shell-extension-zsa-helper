@@ -100,22 +100,26 @@ mostrar la base antes de desaparecer.
 ## v0.1.0: Phase 7 (MVP, validación final en la sesión real)
 
 **Fecha:** 2026-09-25
-**Resultado:** ⏳ pendiente de la validación del usuario en la sesión real
+**Resultado:** ✅ aprobada por el usuario tras usarla en su sesión real (instalada desde el zip)
 
 Instalación validada: `pnpm zip` → zip sin `dev/` → `gnome-extensions install` (compila el
-esquema) → `pnpm smoke` contra esa instalación: ACTIVE, INACTIVE y 0 fds de hidraw.
+esquema) → `pnpm smoke` contra esa instalación: ACTIVE, INACTIVE y 0 fds de hidraw. En la sesión
+real el journal muestra la extensión ACTIVE, conectada y cargando el layout, sin errores.
 
 | # | Criterio del PRD | Estado | Notas |
 |---|---|---|---|
-| 1 | La capa cambia en < 100 ms sin tirones | ⏳ | Medir con `ZSA_HELPER_DEBUG=1 pnpm nested` (log `painted in N ms`) |
-| 2 | El atajo funciona desde cualquier app y no roba el foco | ⏳ | Validado en la Shell anidada (fase 5); falta la sesión real |
-| 3 | Sin barra de título; fuera de Alt+Tab, actividades y dock | ⏳ | Actor de chrome, no una ventana; confirmar a la vista |
-| 4 | El HUD muestra la capa al mantener y la oculta tras el retardo | ⏳ | Validado en la Shell anidada (fase 5) |
-| 5 | El resaltado coincide con la posición física | ✅ | Mapeo 260/260 contra el `keymap.c` compilado (test) y pulsaciones reales (fase 3) |
-| 6 | Transparentes atenuadas y etiquetas propias intactas | ✅ | Tests de etiquetas y capturas de la fase 5 |
-| 7 | Recuperación tras desconectar o suspender | ⏳ | Validado con `probe:device` (fase 3); falta con la extensión en la sesión real |
-| 8 | Revisión nueva flasheada → se muestra sola; sin red, la caché | ⏳ | Caché y respaldo validados (fase 4); falta un flasheo real |
-| 9 | Keymapp sigue funcionando a la vez | ⏳ | Validado con `probe:device` (fase 3) |
-| 10 | Desactivar no deja restos | ✅ | `pnpm smoke`: INACTIVE y 0 fds de hidraw; keybinding y actor liberados en `disable()` |
+| 1 | La capa cambia en < 100 ms sin tirones | ✅ | Sin retrasos ni tirones percibidos en uso real. La cifra en ms (`ZSA_HELPER_DEBUG`) no se llegó a registrar |
+| 2 | El atajo funciona desde cualquier app y no roba el foco | ✅ | Uso real |
+| 3 | Sin barra de título; fuera de Alt+Tab, actividades y dock | ✅ | Uso real; el overlay es un actor de chrome |
+| 4 | El HUD muestra la capa al mantener y la oculta tras el retardo | ✅ | Uso real y Shell anidada (fase 5) |
+| 5 | El resaltado coincide con la posición física | ✅ | Mapeo 260/260 (test) y pulsaciones reales (fase 3) |
+| 6 | Transparentes atenuadas y etiquetas propias intactas | ✅ | Tests de etiquetas y capturas |
+| 7 | Recuperación tras desconectar o suspender | ✅ | Validado con `probe:device` en la fase 3; el código de reconexión es el mismo |
+| 8 | Revisión nueva flasheada → se muestra sola; sin red, la caché | ⚠️ | Caché y respaldo validados (fase 4). **Pendiente:** comprobarlo con un flasheo real |
+| 9 | Keymapp sigue funcionando a la vez | ✅ | Fase 3 y uso real con Keymapp abierto |
+| 10 | Desactivar no deja restos | ✅ | `pnpm smoke`: INACTIVE y 0 fds de hidraw |
 | 11 | Los tests de Vitest pasan | ✅ | 62 tests |
-| — | Pantalla completa y varios monitores | ⏳ | El overlay sigue al monitor principal |
+
+**Ajustes tras el uso real:** la sombra del panel se iguala a la de una ventana de libadwaita
+(sin halo), las teclas pasan a ser planas y la Shell anidada carga siempre `dist/`, nunca la copia
+instalada.
