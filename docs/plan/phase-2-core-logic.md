@@ -139,7 +139,8 @@ Derivada de `keyboards/zsa/voyager/keyboard.json`. Formato `idx:(row,col)@x,y`:
   `{main, sub?, inherited, kind: 'char'|'action'|'layer'|'modifier'|'empty'}` →
   `src/core/labels/resolve.ts`. Reglas en este orden:
   1. `customLabel` tiene prioridad.
-  2. `KC_TRANSPARENT` baja a la primera capa inferior no transparente y marca `inherited: true`.
+  2. `KC_TRANSPARENT` o una tecla sin acciones (`null`, que Oryx compila como `KC_TRANSPARENT`)
+     hereda de la capa base (0) y marca `inherited: true` (decisión revisada: ver el PRD).
   3. `MO` y `hold` con `layer` muestran el título de la capa destino (p. ej. `▸Sym`).
   4. `OSM` usa el símbolo de su modificador; `CW_TOGG` → `CapsW`, `QK_BOOT` → `Boot`,
      `RGB_*` / `TOGGLE_LAYER_COLOR` → `RGB…`.

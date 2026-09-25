@@ -61,8 +61,11 @@ que:
      keycodes del layout actual (letras, números, símbolos US, F1–F12, navegación, modificadores,
      multimedia).
    - `customLabel` de Oryx tiene prioridad sobre la tabla.
-   - `KC_TRANSPARENT` hereda la etiqueta de la primera capa inferior que no sea transparente y se
-     muestra atenuada.
+   - `KC_TRANSPARENT`, y también las teclas `null` (Oryx las compila como `KC_TRANSPARENT`),
+     heredan la etiqueta de la **capa base (0)** y se muestran atenuadas.
+     - El firmware solo informa de la capa más alta y, con `LT`/`MO` desde la base, las capas
+       activas son {0, n}.
+     - La herencia en cadena (tri-layer, capas encadenadas) queda fuera del MVP.
    - Las teclas de acción tienen etiqueta o icono propio: `MO(n)` y `hold` de capa con el nombre
      de la capa destino, `OSM`, `CW_TOGG`, `QK_BOOT`, `RGB_*` y `TOGGLE_LAYER_COLOR`.
    - Las teclas con `hold` o `tapHold` muestran la acción secundaria como subetiqueta.
