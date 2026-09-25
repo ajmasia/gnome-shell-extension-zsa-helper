@@ -16,6 +16,18 @@ Cada control cambia su clave, lo que se comprueba con
   `scale` (`d`) y `refresh-requested` (`u`).
 - Esta ventana sí es una ventana normal con su barra de título Adw (decisión del PRD).
 
+## Notas de implementación
+
+- La construcción de la ventana vive en `src/prefs/build.ts` (`buildPreferences(window, settings,
+  version)`), separada de `ExtensionPreferences`.
+- `pnpm probe:prefs [dir]` abre la ventana con `Gio.memory_settings_backend_new()` (la
+  configuración real no se toca). Captura `prefs-default.png`, cambia varias claves por código y
+  captura `prefs-changed.png`, lo que verifica el sentido ajustes → interfaz.
+- `settings.bind` no puede enlazar una clave `u` con la propiedad `value` (double) de
+  `Adw.SpinRow`; los retardos se sincronizan a mano.
+- La captura del atajo usa un `Adw.Dialog` con `Gtk.EventControllerKey`: Esc cancela,
+  Retroceso desactiva y se exige al menos un modificador.
+
 ## Tasks
 
 ### Páginas y grupos
