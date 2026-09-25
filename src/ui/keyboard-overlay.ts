@@ -164,6 +164,11 @@ export class KeyboardOverlay {
         this.keys[index]?.setPressed(false);
     }
 
+    /** Clears every highlighted key, e.g. when the keyboard disconnects mid-press. */
+    releaseAllKeys(): void {
+        this.clearPressed();
+    }
+
     setAppearance(appearance: OverlayAppearance): void {
         if (appearance.draggable !== this.appearance.draggable) {
             this.setDraggable(appearance.draggable);

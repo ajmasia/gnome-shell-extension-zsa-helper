@@ -46,6 +46,7 @@ export default class ZsaHelperExtension extends Extension {
     private hasLayout = false;
     private debug = false;
     private status: StatusService | null = null;
+    private workareasHandler = 0;
     /** Set when a ZSA keyboard other than the Voyager is connected: its events are ignored. */
     private unsupported = false;
 
@@ -74,6 +75,8 @@ export default class ZsaHelperExtension extends Extension {
         this.connectSettings(this.settings);
 
         this.monitorsHandler = Main.layoutManager.connect('monitors-changed', () => this.onMonitorsChanged());
+        // The work area also changes without a monitor change, e.g. when a dock or panel resizes.
+        this.workareasHandler = global.display.connect('workareas-changed', () => this.overlay?.relayout());
         this.onMonitorsChanged();
         this.watchLocks();
         Main.wm.addKeybinding(
@@ -95,6 +98,10 @@ export default class ZsaHelperExtension extends Extension {
         if (this.monitorsHandler) {
             Main.layoutManager.disconnect(this.monitorsHandler);
             this.monitorsHandler = 0;
+        }
+        if (this.workareasHandler) {
+            global.display.disconnect(this.workareasHandler);
+            this.workareasHandler = 0;
         }
         if (this.keymap && this.keymapHandler) {
             this.keymap.disconnect(this.keymapHandler);
@@ -190,6 +197,10 @@ export default class ZsaHelperExtension extends Extension {
     }
 
     private onDeviceState(state: DeviceState): void {
+        // A key held while the keyboard went away never gets its keyup.
+        if (state.status !== 'connected') {
+            this.overlay?.releaseAllKeys();
+        }
         const detached = { deviceName: null, devicePath: null, protocol: null, firmware: null, oryxFirmware: false };
 
         switch (state.status) {
