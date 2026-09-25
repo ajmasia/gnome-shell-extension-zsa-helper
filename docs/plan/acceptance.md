@@ -135,3 +135,13 @@ instalada.
 | Arrastrar el overlay y restaurar la posición | Tests de posición relativa (ida y vuelta, cambio de resolución, límites), captura de preferencias, `smoke` con el arrastre activo | ✅ validado por el usuario en la Shell anidada |
 
 Siguen pendientes de la v0.1.0: el criterio 8 (flasheo real).
+
+## v0.2.1: corrección del fundido de salida
+
+**Fecha:** 2026-09-25
+**Resultado:** ✅ solicitada por el usuario
+
+| Comprobación | Resultado |
+|---|---|
+| Fotograma a mitad del fundido (`pnpm nested --shots`, `fade-out.png`) | ✅ el fondo del panel y las teclas tienen la misma opacidad efectiva (0.30 y 0.30); antes el fondo desaparecía primero y las teclas quedaban encima |
+| `pnpm test` / `typecheck` / `smoke` | ✅ 69 tests, sin restos al desactivar |
