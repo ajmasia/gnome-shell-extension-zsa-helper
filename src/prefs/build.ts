@@ -20,13 +20,19 @@ const POSITIONS: [OverlayPosition, string][] = [
  * can open it with in-memory settings.
  */
 export function buildPreferences(window: Adw.PreferencesWindow, settings: Gio.Settings, version: string): void {
-    const page = new Adw.PreferencesPage({ title: 'General', icon_name: 'input-keyboard-symbolic' });
-    page.add(shortcutGroup(settings));
-    page.add(hudGroup(settings));
-    page.add(appearanceGroup(settings));
-    page.add(layoutGroup(settings, version));
-    window.add(page);
-    window.set_default_size(620, 1060);
+    // With more than one page, Adwaita shows them as tabs in the header bar.
+    window.add(page('General', 'input-keyboard-symbolic', [shortcutGroup(settings), hudGroup(settings), keysGroup(settings)]));
+    window.add(page('Appearance', 'applications-graphics-symbolic', [positionGroup(settings), styleGroup(settings)]));
+    window.add(page('Layout', 'view-refresh-symbolic', [layoutGroup(settings, version)]));
+    window.set_default_size(620, 720);
+}
+
+function page(title: string, iconName: string, groups: Adw.PreferencesGroup[]): Adw.PreferencesPage {
+    const page = new Adw.PreferencesPage({ name: title.toLowerCase(), title, icon_name: iconName });
+    for (const group of groups) {
+        page.add(group);
+    }
+    return page;
 }
 
 function shortcutGroup(settings: Gio.Settings): Adw.PreferencesGroup {
@@ -56,8 +62,16 @@ function hudGroup(settings: Gio.Settings): Adw.PreferencesGroup {
     return group;
 }
 
-function appearanceGroup(settings: Gio.Settings): Adw.PreferencesGroup {
-    const group = new Adw.PreferencesGroup({ title: 'Appearance' });
+function keysGroup(settings: Gio.Settings): Adw.PreferencesGroup {
+    const group = new Adw.PreferencesGroup({ title: 'Keys' });
+    const highlight = new Adw.SwitchRow({ title: 'Highlight pressed keys' });
+    settings.bind('highlight-enabled', highlight, 'active', Gio.SettingsBindFlags.DEFAULT);
+    group.add(highlight);
+    return group;
+}
+
+function positionGroup(settings: Gio.Settings): Adw.PreferencesGroup {
+    const group = new Adw.PreferencesGroup({ title: 'Position' });
 
     const position = new Adw.ComboRow({
         title: 'Position',
@@ -103,13 +117,13 @@ function appearanceGroup(settings: Gio.Settings): Adw.PreferencesGroup {
     reset.add_suffix(resetButton);
     reset.activatable_widget = resetButton;
     group.add(reset);
+    return group;
+}
 
+function styleGroup(settings: Gio.Settings): Adw.PreferencesGroup {
+    const group = new Adw.PreferencesGroup({ title: 'Style' });
     group.add(doubleSpinRow(settings, 'opacity', 'Opacity', 0.3, 1, 0.05, 2));
     group.add(doubleSpinRow(settings, 'scale', 'Size', 0.5, 2, 0.1, 1));
-
-    const highlight = new Adw.SwitchRow({ title: 'Highlight pressed keys' });
-    settings.bind('highlight-enabled', highlight, 'active', Gio.SettingsBindFlags.DEFAULT);
-    group.add(highlight);
     return group;
 }
 
