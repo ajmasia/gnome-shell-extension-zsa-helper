@@ -63,3 +63,22 @@ a la tecla.
 | Revisión inexistente, con y sin red | ✅ `LayoutUnavailableError` con el motivo de cada fuente |
 | IDs inválidos | ✅ rechazados antes de tocar disco, red o SQL |
 | `pnpm test` / `typecheck` / `smoke` | ✅ 57 tests, sin regresiones |
+
+## v0.0.5: Phase 5 (overlay, atajo, HUD y resaltado)
+
+**Fecha:** 2026-09-25
+**Resultado:** ✅ aprobada por el usuario
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm test` / `typecheck` | ✅ 62 tests |
+| Capturas en la Shell anidada (`pnpm nested --shots`) | ✅ las 5 capas y el resaltado se renderizan sin errores de JS |
+| `pnpm smoke` | ✅ ACTIVE con 1 fd de hidraw → INACTIVE con 0 fds (sin restos al desactivar) |
+| HUD al mantener una capa | ✅ validado por el usuario |
+| Atajo `Super+Alt+K` sin robar el foco | ✅ validado por el usuario |
+| Resaltado en la posición física | ✅ validado por el usuario |
+| Reconexión con el overlay visible | ✅ validado por el usuario |
+| Sin barra de título, fuera de Alt+Tab | ✅ actor de chrome de la Shell, no una ventana |
+
+**Ajuste tras la revisión:** el overlay mantiene la capa consultada mientras se oculta, en lugar de
+mostrar la base antes de desaparecer.
