@@ -4,8 +4,8 @@ A GNOME Shell extension that shows a floating overlay with the characters of the
 of your [ZSA Voyager](https://www.zsa.io/voyager). It is meant to help while you learn your
 layers: press a shortcut, or just hold a layer key, and see what every key does right now.
 
-> **Status:** early development (`0.0.x`). The core logic (protocol, layout, labels, geometry) is
-> in place, but the extension does not show an overlay yet. See [the plan](docs/plan/) for the roadmap.
+> **Status:** early development (`0.0.x`). The core logic and the keyboard connection work
+> (`pnpm probe:device` prints live layer changes), but the extension does not show an overlay yet. See [the plan](docs/plan/) for the roadmap.
 
 ## Requirements
 
@@ -40,6 +40,7 @@ gnome-extensions enable zsa-helper@ajmasia
 | `pnpm typecheck` | Type-check against the GNOME Shell 48 typings |
 | `pnpm nested` | Run a nested GNOME Shell with the extension enabled, without logging out |
 | `pnpm smoke` | Headless check that the extension enables and disables cleanly in a nested shell |
+| `pnpm probe:device` | Print live events from the keyboard (layers, key presses, firmware) |
 
 The nested shell uses its own dconf database (`~/.config/dconf/zsa_helper_nested`), so enabling the
 extension there never changes your real session.

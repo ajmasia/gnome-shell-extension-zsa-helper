@@ -7,6 +7,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.3] - 2026-09-25
+
+### Added
+
+- Keyboard connection over the Oryx raw HID protocol:
+  - Finds the device by ZSA vendor id and raw HID descriptor.
+  - Pairs, then reports layer changes, key presses and the flashed layout and revision ids.
+- Automatic reconnection after unplugging or reflashing, and a new handshake after resuming from
+  suspend.
+- Clear error state when the udev rule is missing and the device cannot be opened.
+- `pnpm probe:device` script that prints live keyboard events.
+
+### Fixed
+
+- Pairing now works without Keymapp running: reports are written with `write_bytes_async`, so
+  the keyboard no longer receives corrupted commands.
+
+### Changed
+
+- GNOME typings are pinned to the GNOME 48 set.
+
 ## [0.0.2] - 2026-09-25
 
 ### Added
