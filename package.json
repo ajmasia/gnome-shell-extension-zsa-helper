@@ -8,7 +8,7 @@
   "author": "Antonio Masiá <ajmasia.dev@ysnp.link>",
   "scripts": {
     "build": "tsc && node scripts/copy-assets.mjs",
-    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json && tsc -p tsconfig.gjs-tests.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "install:local": "bash scripts/install.sh",
@@ -17,7 +17,8 @@
     "probe:device": "pnpm build && gjs -m dist/dev/probe-device.js",
     "probe:layout": "pnpm build >/dev/null && gjs -m dist/dev/probe-layout.js",
     "probe:prefs": "pnpm build >/dev/null && gjs -m dist/dev/probe-prefs.js",
-    "zip": "bash scripts/pack.sh"
+    "zip": "bash scripts/pack.sh",
+    "test:gjs": "rm -rf dist-tests && tsc -p tsconfig.gjs-tests.json && gjs -m dist-tests/tests-gjs/main.js"
   },
   "devDependencies": {
     "@girs/clutter-16": "16.0.0-4.0.0-beta.36",
