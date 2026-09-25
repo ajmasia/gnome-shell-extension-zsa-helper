@@ -7,6 +7,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-09-25
+
+### Added
+
+- Layout service that loads the revision flashed on the keyboard from, in order:
+  - Its own disk cache (`~/.cache/zsa-helper/layouts/`).
+  - The Oryx GraphQL API, whose result is cached.
+  - Keymapp's local cache, read through `sqlite3` when it is installed.
+- Oryx and Keymapp ids are validated before they reach the disk, the network or SQL.
+- `pnpm probe:layout` script to load a revision and report its source.
+
 ## [0.0.3] - 2026-09-25
 
 ### Added

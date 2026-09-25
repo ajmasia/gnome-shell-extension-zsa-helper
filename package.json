@@ -1,6 +1,6 @@
 {
   "name": "zsa-helper",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "GNOME Shell extension that shows a floating overlay with the active layer of a ZSA Voyager keyboard",
   "type": "module",
   "private": true,
