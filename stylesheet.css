@@ -32,7 +32,6 @@
     border-radius: 8px;
     padding: 3px 2px;
     color: #f4f4f6;
-    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.35);
     transition-duration: 80ms;
 }
 
@@ -75,7 +74,6 @@
 .zsa-key-pressed.zsa-key--inherited {
     background-color: #3584e4;
     color: #ffffff;
-    box-shadow: none;
 }
 
 .zsa-key-pressed .zsa-key-sub {
