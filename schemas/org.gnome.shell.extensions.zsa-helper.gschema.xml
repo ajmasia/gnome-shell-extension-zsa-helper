@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <enum id="org.gnome.shell.extensions.zsa-helper.Position">
+    <value nick="bottom-center" value="0"/>
+    <value nick="top-center" value="1"/>
+    <value nick="bottom-left" value="2"/>
+    <value nick="bottom-right" value="3"/>
+    <value nick="top-left" value="4"/>
+    <value nick="top-right" value="5"/>
+  </enum>
+
+  <schema id="org.gnome.shell.extensions.zsa-helper" path="/org/gnome/shell/extensions/zsa-helper/">
+    <key name="toggle-overlay" type="as">
+      <default><![CDATA[['<Super><Alt>k']]]></default>
+      <summary>Toggle overlay shortcut</summary>
+      <description>Keyboard shortcut that shows or hides the layer overlay.</description>
+    </key>
+    <key name="hud-enabled" type="b">
+      <default>true</default>
+      <summary>Show automatically on non-base layers</summary>
+      <description>Show the overlay while a layer other than the base layer is active.</description>
+    </key>
+    <key name="hud-show-delay" type="u">
+      <range min="0" max="1000"/>
+      <default>150</default>
+      <summary>HUD show delay (ms)</summary>
+      <description>How long a non-base layer must stay active before the overlay appears.</description>
+    </key>
+    <key name="hud-hide-delay" type="u">
+      <range min="0" max="1000"/>
+      <default>300</default>
+      <summary>HUD hide delay (ms)</summary>
+      <description>How long to wait after returning to the base layer before hiding the overlay.</description>
+    </key>
+    <key name="highlight-enabled" type="b">
+      <default>true</default>
+      <summary>Highlight pressed keys</summary>
+      <description>Highlight each key on the overlay while it is pressed.</description>
+    </key>
+    <key name="position" enum="org.gnome.shell.extensions.zsa-helper.Position">
+      <default>'bottom-center'</default>
+      <summary>Overlay position</summary>
+      <description>Where the overlay is placed on the primary monitor.</description>
+    </key>
+    <key name="opacity" type="d">
+      <range min="0.3" max="1.0"/>
+      <default>0.92</default>
+      <summary>Overlay opacity</summary>
+      <description>Opacity of the overlay panel.</description>
+    </key>
+    <key name="scale" type="d">
+      <range min="0.5" max="2.0"/>
+      <default>1.0</default>
+      <summary>Overlay scale</summary>
+      <description>Size multiplier for the overlay.</description>
+    </key>
+    <key name="refresh-requested" type="u">
+      <default>0</default>
+      <summary>Layout refresh request counter</summary>
+      <description>Internal: incremented by the preferences to force a layout refresh.</description>
+    </key>
+  </schema>
+</schemalist>
