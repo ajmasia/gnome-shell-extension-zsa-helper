@@ -4,7 +4,7 @@ A GNOME Shell extension that shows a floating overlay with the characters of the
 of your [ZSA Voyager](https://www.zsa.io/voyager). It is meant to help while you learn your
 layers: hold a layer key, or press a shortcut, and see what every key does right now.
 
-> **Status:** `0.2.1`. See the [changelog](CHANGELOG.md).
+> **Status:** `0.3.0`. See the [changelog](CHANGELOG.md).
 
 ![The overlay showing the base layer](docs/images/overlay-main.png)
 
@@ -24,6 +24,8 @@ layers: hold a layer key, or press a shortcut, and see what every key does right
 - **Key highlighting.** Every key you press lights up in its physical position.
 - **Lock indicators.** Caps Lock and Num Lock keys show a green LED while the lock is on.
 - **Movable.** Optionally drag the overlay anywhere; *Reset position* brings it back.
+- **Multi-monitor.** Pick the monitor, or drag the overlay onto another screen. It falls back to the
+  primary monitor while the chosen one is unplugged.
 
 ![Pressed keys highlighted on the overlay](docs/images/overlay-pressed.png)
 
@@ -59,7 +61,8 @@ gnome-extensions enable zsa-helper@ajmasia
 - **Hold a layer key:** the overlay appears after 150 ms and hides 300 ms after you return to the
   base layer. It keeps showing the layer you were looking at while it fades out.
 - **`Super+Alt+K`:** pin or unpin the overlay.
-- **Preferences:** `gnome-extensions prefs zsa-helper@ajmasia`, or the Extensions app.
+- **Preferences:** `gnome-extensions prefs zsa-helper@ajmasia`, or the Extensions app. They are
+  split into three tabs: General, Appearance and Layout.
 
 ![Preferences](docs/images/preferences.png)
 
@@ -69,8 +72,9 @@ gnome-extensions enable zsa-helper@ajmasia
 | Show while a layer is held | On |
 | Show / hide delay | 150 ms / 300 ms |
 | Position | Bottom center (or *Custom* after dragging) |
+| Monitor | Primary (or the screen you dragged the overlay to) |
 | Move by dragging | Off. When on, the overlay takes clicks so it can be dragged |
-| Reset position | Back to bottom center |
+| Reset position | Back to bottom center on the primary monitor |
 | Opacity / size | 0.92 / 1.0 |
 | Highlight pressed keys | On |
 | Refresh layout | Downloads the flashed revision again, ignoring the cache |

@@ -7,6 +7,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-25
+
+### Added
+
+- Multi-monitor support:
+  - Choose the monitor for the overlay in the preferences.
+  - Dragging the overlay onto another screen switches to that monitor and remembers the position
+    within it.
+  - Monitors are stored by connector (`DP-1`, `HDMI-1`…). While the chosen one is unplugged, the
+    overlay uses the primary monitor, and the choice is kept for when it comes back.
+- *Reset position* also restores the primary monitor.
+
+### Changed
+
+- The preferences are organised in three tabs: General, Appearance and Layout.
+
 ## [0.2.1] - 2026-09-25
 
 ### Fixed
