@@ -13,6 +13,8 @@ export interface KeyLabel {
     inherited: boolean;
     /** Keycodes with no known label, so the caller can report them. */
     unknownCodes: string[];
+    /** Colour the key sets (`RGB` keys), shown as a swatch. */
+    color?: string;
 }
 
 const BASE_LAYER = 0;
@@ -109,6 +111,10 @@ function resolveKey(layout: Layout, key: Key): KeyLabel {
     const main = key.customLabel ?? primary?.text ?? '';
     const kind = key.customLabel ? customLabelKind(key.customLabel) : (primary?.kind ?? 'empty');
     const label: KeyLabel = { main, kind, inherited: false, unknownCodes };
+    const color = key.tap?.code === 'RGB' ? key.tap.color : undefined;
+    if (color) {
+        label.color = color;
+    }
 
     if (secondary && secondary.text !== '' && secondary.text !== main) {
         label.sub = secondary.text;

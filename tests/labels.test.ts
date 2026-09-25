@@ -53,7 +53,7 @@ describe('resolveKeyLabel', () => {
         expect(label(MAIN, 6)).toMatchObject({ main: 'CapsW', kind: 'action' });
         expect(label(BRD_SYS, 0)).toMatchObject({ main: 'RGB ⏻' });
         expect(label(BRD_SYS, 1)).toMatchObject({ main: 'Layer Color' });
-        expect(label(BRD_SYS, 21)).toMatchObject({ main: 'Color' });
+        expect(label(BRD_SYS, 21)).toMatchObject({ main: 'Color', color: '#ff0000' });
         expect(label(BRD_SYS, 31)).toMatchObject({ main: 'Boot' });
     });
 

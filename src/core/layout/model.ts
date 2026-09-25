@@ -20,6 +20,8 @@ export interface Action {
     modifiers?: Modifiers;
     /** Modifier of a one-shot modifier (`OSM`), e.g. `MOD_RALT`. */
     modifier?: string;
+    /** Colour an `RGB` action sets, e.g. `#ff0000`. */
+    color?: string;
 }
 
 export interface Key {

@@ -82,6 +82,9 @@ function parseAction(value: unknown): Action | undefined {
     if (typeof value.modifier === 'string') {
         action.modifier = value.modifier;
     }
+    if (typeof value.color === 'string' && value.color !== '') {
+        action.color = value.color;
+    }
     const modifiers = parseModifiers(value.modifiers);
     if (modifiers) {
         action.modifiers = modifiers;
