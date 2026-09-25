@@ -1,10 +1,19 @@
 import Clutter from 'gi://Clutter';
+import Meta from 'gi://Meta';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { VOYAGER_HEIGHT, VOYAGER_KEYS, VOYAGER_WIDTH } from '../core/geometry/voyager.js';
 import { resolveKeyLabel } from '../core/labels/resolve.js';
 import type { Layout } from '../core/layout/model.js';
-import { overlayOrigin, type OverlayPosition } from '../core/positioning.js';
+import {
+    clampOrigin,
+    overlayOrigin,
+    toRelative,
+    type OverlayPosition,
+    type Point,
+    type Rect,
+    type RelativePosition,
+} from '../core/positioning.js';
 import { KeyCap, type LockState } from './key-cap.js';
 
 /** Key size and gap in logical pixels at scale 1. */
@@ -18,11 +27,16 @@ export interface OverlayAppearance {
     opacity: number;
     /** 0.5–2.0 */
     scale: number;
+    /** Where the overlay was dragged to; used when `position` is `custom`. */
+    custom: RelativePosition;
+    /** Whether the overlay can be dragged with the mouse. Only then does it receive clicks. */
+    draggable: boolean;
 }
 
 /**
  * The floating keyboard. It is a Shell chrome actor, not a window: no title bar, not in
- * Alt+Tab or the overview, and it never takes focus or input.
+ * Alt+Tab or the overview, and it never takes focus. It ignores the mouse unless dragging is
+ * enabled; then it can be moved with the primary button.
  */
 export class KeyboardOverlay {
     readonly actor: St.BoxLayout;
@@ -33,11 +47,20 @@ export class KeyboardOverlay {
     private readonly keys: KeyCap[];
     private layout: Layout | null = null;
     private layer = 0;
-    private appearance: OverlayAppearance = { position: 'bottom-center', opacity: 0.92, scale: 1 };
+    private appearance: OverlayAppearance = {
+        position: 'bottom-center',
+        opacity: 0.92,
+        scale: 1,
+        custom: [0.5, 1],
+        draggable: false,
+    };
     private shown = false;
     private stale = false;
+    private drag: { grab: Clutter.Grab; offset: Point } | null = null;
+    private hovered = false;
 
-    constructor() {
+    /** `onDragged` receives the new position when a drag ends. */
+    constructor(private readonly onDragged: (position: RelativePosition) => void = () => {}) {
         this.actor = new St.BoxLayout({
             style_class: 'zsa-overlay',
             orientation: Clutter.Orientation.VERTICAL,
@@ -64,7 +87,13 @@ export class KeyboardOverlay {
         this.actor.add_child(this.board);
         this.actor.add_child(this.status);
 
-        Main.layoutManager.addTopChrome(this.actor, { affectsInputRegion: false, trackFullscreen: false });
+        this.actor.connect('button-press-event', (_actor, event: Clutter.Event) => this.onPress(event));
+        this.actor.connect('motion-event', (_actor, event: Clutter.Event) => this.onMotion(event));
+        this.actor.connect('button-release-event', () => this.endDrag(true));
+        this.actor.connect('enter-event', () => this.setHovered(true));
+        this.actor.connect('leave-event', () => this.setHovered(false));
+
+        this.addChrome(false);
         this.relayout();
     }
 
@@ -126,6 +155,9 @@ export class KeyboardOverlay {
     }
 
     setAppearance(appearance: OverlayAppearance): void {
+        if (appearance.draggable !== this.appearance.draggable) {
+            this.setDraggable(appearance.draggable);
+        }
         this.appearance = appearance;
         if (this.shown) {
             this.actor.opacity = this.targetOpacity();
@@ -150,6 +182,7 @@ export class KeyboardOverlay {
                 mode: Clutter.AnimationMode.EASE_OUT_QUAD,
             });
         } else {
+            this.endDrag(false);
             this.actor.ease({
                 opacity: 0,
                 duration: FADE_MS,
@@ -174,6 +207,8 @@ export class KeyboardOverlay {
     }
 
     destroy(): void {
+        this.endDrag(false);
+        this.setHovered(false);
         this.actor.remove_all_transitions();
         Main.layoutManager.removeChrome(this.actor);
         this.actor.destroy();
@@ -202,16 +237,96 @@ export class KeyboardOverlay {
     }
 
     private reposition(): void {
-        const monitor = Main.layoutManager.primaryMonitor;
-        if (!monitor) {
+        const area = this.workArea();
+        if (!area || this.drag) {
             return;
         }
-        const area = Main.layoutManager.getWorkAreaForMonitor(Main.layoutManager.primaryIndex);
+        const [width, height] = this.size();
+        const scale = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        const { x, y } = overlayOrigin(area, width, height, this.appearance.position, scale, this.appearance.custom);
+        this.actor.set_position(x, y);
+    }
+
+    private workArea(): Rect | null {
+        if (!Main.layoutManager.primaryMonitor) {
+            return null;
+        }
+        return Main.layoutManager.getWorkAreaForMonitor(Main.layoutManager.primaryIndex);
+    }
+
+    private size(): [number, number] {
         const [, width] = this.actor.get_preferred_width(-1);
         const [, height] = this.actor.get_preferred_height(width);
-        const scale = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-        const { x, y } = overlayOrigin(area, width, height, this.appearance.position, scale);
+        return [width, height];
+    }
+
+    /**
+     * Adds the actor as Shell chrome. It only takes part in the input region when it can be
+     * dragged, so clicks go through to the windows below otherwise.
+     */
+    private addChrome(affectsInputRegion: boolean): void {
+        Main.layoutManager.addTopChrome(this.actor, { affectsInputRegion, trackFullscreen: false });
+    }
+
+    private setDraggable(draggable: boolean): void {
+        this.endDrag(false);
+        this.setHovered(false);
+        this.actor.reactive = draggable;
+        Main.layoutManager.removeChrome(this.actor);
+        this.addChrome(draggable);
+    }
+
+    private onPress(event: Clutter.Event): boolean {
+        if (!this.appearance.draggable || this.drag || event.get_button() !== Clutter.BUTTON_PRIMARY) {
+            return Clutter.EVENT_PROPAGATE;
+        }
+        const [px, py] = event.get_coords();
+        const [x, y] = this.actor.get_position();
+        this.drag = { grab: global.stage.grab(this.actor), offset: { x: px - x, y: py - y } };
+        global.display.set_cursor(Meta.Cursor.GRABBING);
+        return Clutter.EVENT_STOP;
+    }
+
+    private onMotion(event: Clutter.Event): boolean {
+        const area = this.workArea();
+        if (!this.drag || !area) {
+            return Clutter.EVENT_PROPAGATE;
+        }
+        const [px, py] = event.get_coords();
+        const [width, height] = this.size();
+        const { x, y } = clampOrigin(area, width, height, { x: px - this.drag.offset.x, y: py - this.drag.offset.y });
         this.actor.set_position(x, y);
+        return Clutter.EVENT_STOP;
+    }
+
+    /** Releases the pointer grab; with `save`, reports where the overlay was dropped. */
+    private endDrag(save: boolean): boolean {
+        const drag = this.drag;
+        if (!drag) {
+            return Clutter.EVENT_PROPAGATE;
+        }
+        this.drag = null;
+        drag.grab.dismiss();
+        global.display.set_cursor(this.hovered && this.appearance.draggable ? Meta.Cursor.GRAB : Meta.Cursor.DEFAULT);
+
+        const area = this.workArea();
+        if (save && area) {
+            const [x, y] = this.actor.get_position();
+            const [width, height] = this.size();
+            this.onDragged(toRelative(area, width, height, { x, y }));
+        }
+        return Clutter.EVENT_STOP;
+    }
+
+    private setHovered(hovered: boolean): boolean {
+        if (hovered === this.hovered) {
+            return Clutter.EVENT_PROPAGATE;
+        }
+        this.hovered = hovered;
+        if (!this.drag) {
+            global.display.set_cursor(hovered && this.appearance.draggable ? Meta.Cursor.GRAB : Meta.Cursor.DEFAULT);
+        }
+        return Clutter.EVENT_PROPAGATE;
     }
 
     private targetOpacity(): number {
