@@ -31,6 +31,21 @@ desactivar la extensión.
   keybinding, handlers de `settings.connect`, `VoyagerDevice.stop()`,
   `LayoutService.destroy()`, timers y fuentes de `GLib`.
 
+## Notas de implementación
+
+- **Capturas automáticas:** `pnpm nested --shots [dir]` arranca la Shell anidada con
+  `ZSA_HELPER_SCREENSHOT_DIR`. Un gancho de desarrollo (`src/dev/screenshots.ts`, cargado con
+  `import()` dinámico solo si existe la variable) captura el overlay de cada capa y un estado con
+  teclas pulsadas. Hace falta porque el D-Bus de capturas de GNOME está restringido.
+- **El smoke test comprueba descriptores:** con la extensión activa la Shell tiene 1 fd abierto
+  a `/dev/hidraw*`; al desactivarla, 0.
+- **`actor.ease()`:** la ampliación de tipos de `@girs/gnome-shell` no surte efecto (amplía el
+  índice del paquete, no el módulo con el namespace). Hay una propia en
+  `src/types/clutter-ease.d.ts`.
+- **Teclas `RGB`:** muestran el color que fijan como un punto bajo la etiqueta; el texto
+  coloreado no se leía con colores oscuros.
+- **Etiquetas largas** ("Layer Color") parten en dos líneas en vez de truncarse.
+
 ## Tasks
 
 ### Widgets
