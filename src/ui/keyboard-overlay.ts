@@ -1,5 +1,6 @@
 import Clutter from 'gi://Clutter';
 import Meta from 'gi://Meta';
+import Mtk from 'gi://Mtk';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { VOYAGER_HEIGHT, VOYAGER_KEYS, VOYAGER_WIDTH } from '../core/geometry/voyager.js';
@@ -31,6 +32,8 @@ export interface OverlayAppearance {
     custom: RelativePosition;
     /** Whether the overlay can be dragged with the mouse. Only then does it receive clicks. */
     draggable: boolean;
+    /** Index of the monitor to show on; the primary one if it does not exist. */
+    monitor: number;
 }
 
 /**
@@ -53,14 +56,17 @@ export class KeyboardOverlay {
         scale: 1,
         custom: [0.5, 1],
         draggable: false,
+        monitor: -1,
     };
     private shown = false;
     private stale = false;
     private drag: { grab: Clutter.Grab; offset: Point } | null = null;
     private hovered = false;
 
-    /** `onDragged` receives the new position when a drag ends. */
-    constructor(private readonly onDragged: (position: RelativePosition) => void = () => {}) {
+    /** `onDragged` receives where a drag ended: the monitor index and the position within it. */
+    constructor(
+        private readonly onDragged: (position: RelativePosition, monitor: number) => void = () => {},
+    ) {
         this.actor = new St.BoxLayout({
             style_class: 'zsa-overlay',
             orientation: Clutter.Orientation.VERTICAL,
@@ -251,11 +257,19 @@ export class KeyboardOverlay {
         this.actor.set_position(x, y);
     }
 
+    /** Work area of the chosen monitor, or of the primary one if that monitor is gone. */
     private workArea(): Rect | null {
         if (!Main.layoutManager.primaryMonitor) {
             return null;
         }
-        return Main.layoutManager.getWorkAreaForMonitor(Main.layoutManager.primaryIndex);
+        const { monitor } = this.appearance;
+        const index = monitor >= 0 && monitor < Main.layoutManager.monitors.length ? monitor : Main.layoutManager.primaryIndex;
+        return Main.layoutManager.getWorkAreaForMonitor(index);
+    }
+
+    /** The whole desktop, so a drag can cross from one monitor to another. */
+    private desktopArea(): Rect {
+        return { x: 0, y: 0, width: global.stage.width, height: global.stage.height };
     }
 
     private size(): [number, number] {
@@ -292,10 +306,10 @@ export class KeyboardOverlay {
     }
 
     private onMotion(event: Clutter.Event): boolean {
-        const area = this.workArea();
-        if (!this.drag || !area) {
+        if (!this.drag) {
             return Clutter.EVENT_PROPAGATE;
         }
+        const area = this.desktopArea();
         const [px, py] = event.get_coords();
         const [width, height] = this.size();
         const { x, y } = clampOrigin(area, width, height, { x: px - this.drag.offset.x, y: py - this.drag.offset.y });
@@ -313,11 +327,15 @@ export class KeyboardOverlay {
         drag.grab.dismiss();
         global.display.set_cursor(this.hovered && this.appearance.draggable ? Meta.Cursor.GRAB : Meta.Cursor.DEFAULT);
 
-        const area = this.workArea();
-        if (save && area) {
+        if (save && Main.layoutManager.primaryMonitor) {
+            // The monitor that holds most of the overlay wins; keep the overlay inside its work area.
             const [x, y] = this.actor.get_position();
             const [width, height] = this.size();
-            this.onDragged(toRelative(area, width, height, { x, y }));
+            const monitor = global.display.get_monitor_index_for_rect(new Mtk.Rectangle({ x, y, width, height }));
+            const area = Main.layoutManager.getWorkAreaForMonitor(monitor);
+            const origin = clampOrigin(area, width, height, { x, y });
+            this.actor.set_position(origin.x, origin.y);
+            this.onDragged(toRelative(area, width, height, origin), monitor);
         }
         return Clutter.EVENT_STOP;
     }
