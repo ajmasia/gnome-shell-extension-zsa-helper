@@ -44,6 +44,9 @@ export default class ZsaHelperExtension extends Extension {
     private firmware: { layoutId: string; revisionId: string } | null = null;
     private layoutRequest = 0;
     private hasLayout = false;
+    /** True while an older cached revision is shown because the flashed one could not be loaded. */
+    private layoutIsStale = false;
+    private networkHandler = 0;
     private debug = false;
     private status: StatusService | null = null;
     private workareasHandler = 0;
@@ -93,6 +96,12 @@ export default class ZsaHelperExtension extends Extension {
         this.workareasHandler = global.display.connect('workareas-changed', () => this.overlay?.relayout());
         this.onMonitorsChanged();
         this.watchLocks();
+        // A stale layout is retried as soon as the network comes back.
+        this.networkHandler = Gio.NetworkMonitor.get_default().connect('network-changed', (_monitor, available) => {
+            if (available && this.layoutIsStale) {
+                void this.loadLayout();
+            }
+        });
         Main.wm.addKeybinding(
             TOGGLE_KEY,
             this.settings,
@@ -112,6 +121,10 @@ export default class ZsaHelperExtension extends Extension {
         if (this.monitorsHandler) {
             Main.layoutManager.disconnect(this.monitorsHandler);
             this.monitorsHandler = 0;
+        }
+        if (this.networkHandler) {
+            Gio.NetworkMonitor.get_default().disconnect(this.networkHandler);
+            this.networkHandler = 0;
         }
         if (this.workareasHandler) {
             global.display.disconnect(this.workareasHandler);
@@ -148,6 +161,7 @@ export default class ZsaHelperExtension extends Extension {
         this.settings = null;
         this.firmware = null;
         this.hasLayout = false;
+        this.layoutIsStale = false;
         this.unsupported = false;
         this.layoutRequest++;
     }
@@ -176,7 +190,7 @@ export default class ZsaHelperExtension extends Extension {
             }
             const changed = this.firmware?.layoutId !== layoutId || this.firmware?.revisionId !== revisionId;
             this.firmware = { layoutId, revisionId };
-            if (changed || !this.hasLayout) {
+            if (changed || !this.hasLayout || this.layoutIsStale) {
                 void this.loadLayout();
             }
         });
@@ -261,13 +275,17 @@ export default class ZsaHelperExtension extends Extension {
             if (forceRefresh) {
                 await layouts.invalidate();
             }
-            const { layout, source } = await layouts.get(firmware.layoutId, firmware.revisionId, { forceRefresh });
+            const { layout, source, reasons } = await layouts.get(firmware.layoutId, firmware.revisionId, { forceRefresh });
             if (request !== this.layoutRequest) {
                 return;
             }
             console.log(`[zsa-helper] layout ${layout.layoutId}/${layout.revisionId} "${layout.title}" from ${source}`);
             this.reportUnknownKeycodes(layout);
             this.hasLayout = true;
+            this.layoutIsStale = source === 'stale-cache';
+            if (this.layoutIsStale) {
+                console.warn(`[zsa-helper] showing cached revision ${layout.revisionId}: ${reasons.join('; ')}`);
+            }
             this.status?.update({
                 layout: { title: layout.title, layoutId: layout.layoutId, revisionId: layout.revisionId, source },
                 layoutError: null,
