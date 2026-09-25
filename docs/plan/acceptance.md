@@ -123,3 +123,15 @@ real el journal muestra la extensión ACTIVE, conectada y cargando el layout, si
 **Ajustes tras el uso real:** la sombra del panel se iguala a la de una ventana de libadwaita
 (sin halo), las teclas pasan a ser planas y la Shell anidada carga siempre `dist/`, nunca la copia
 instalada.
+
+## v0.2.0: mejoras tras el MVP
+
+**Fecha:** 2026-09-25
+**Resultado:** ✅ aprobada por el usuario
+
+| Mejora | Comprobación | Resultado |
+|---|---|---|
+| LED en las teclas de bloqueo (Caps Lock, Num Lock) | Tests de etiquetas (incluidas heredadas y con modificadores), captura con Caps activo, `smoke` | ✅ validado por el usuario en uso real |
+| Arrastrar el overlay y restaurar la posición | Tests de posición relativa (ida y vuelta, cambio de resolución, límites), captura de preferencias, `smoke` con el arrastre activo | ✅ validado por el usuario en la Shell anidada |
+
+Siguen pendientes de la v0.1.0: el criterio 8 (flasheo real).
