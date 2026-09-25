@@ -18,6 +18,7 @@
     "probe:layout": "pnpm build >/dev/null && gjs -m dist/dev/probe-layout.js"
   },
   "devDependencies": {
+    "@girs/clutter-16": "16.0.0-4.0.0-beta.36",
     "@girs/gjs": "4.0.0-beta.36",
     "@girs/glibunix-2.0": "2.0.0-4.0.0-beta.36",
     "@girs/gnome-shell": "48.0.4",

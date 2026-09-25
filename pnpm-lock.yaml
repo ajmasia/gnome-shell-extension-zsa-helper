@@ -52,6 +52,9 @@ importers:
 
   .:
     devDependencies:
+      '@girs/clutter-16':
+        specifier: 16.0.0-4.0.0-beta.36
+        version: 16.0.0-4.0.0-beta.36
       '@girs/gjs':
         specifier: 4.0.0-beta.36
         version: 4.0.0-beta.36
