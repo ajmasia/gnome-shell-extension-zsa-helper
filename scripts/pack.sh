@@ -9,6 +9,13 @@ out="build"
 rm -rf dist
 pnpm build >/dev/null
 
+# Drop development-only code (the screenshot hook) from the packaged extension.
+sed -i '/\/\/ dev-only:start/,/\/\/ dev-only:end/d' dist/extension.js
+if grep -q "dev/" dist/extension.js; then
+    echo "error: dist/extension.js still references development code" >&2
+    exit 1
+fi
+
 extra=()
 for dir in dist/*/; do
     name="$(basename "$dir")"

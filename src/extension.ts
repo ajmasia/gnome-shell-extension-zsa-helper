@@ -259,7 +259,9 @@ export default class ZsaHelperExtension extends Extension {
                 layoutError: null,
             });
             this.overlay?.setLayout(layout);
+            // dev-only:start
             this.runDevScreenshots(layout);
+            // dev-only:end
         } catch (e) {
             if (request !== this.layoutRequest) {
                 return;
@@ -277,6 +279,7 @@ export default class ZsaHelperExtension extends Extension {
         }
     }
 
+    // dev-only:start
     /** Development only: see src/dev/screenshots.ts. */
     private runDevScreenshots(layout: Layout): void {
         const dir = GLib.getenv('ZSA_HELPER_SCREENSHOT_DIR');
@@ -287,6 +290,7 @@ export default class ZsaHelperExtension extends Extension {
             .then(({ captureLayers }) => this.overlay && captureLayers(this.overlay, layout, dir))
             .catch(e => console.error(`[zsa-helper] screenshots failed: ${e}`));
     }
+    // dev-only:end
 
     /** With ZSA_HELPER_DEBUG set, logs how long a layer change takes to reach the screen. */
     private logPaintLatency(layer: number, started: number): void {
