@@ -145,3 +145,16 @@ Siguen pendientes de la v0.1.0: el criterio 8 (flasheo real).
 |---|---|
 | Fotograma a mitad del fundido (`pnpm nested --shots`, `fade-out.png`) | ✅ el fondo del panel y las teclas tienen la misma opacidad efectiva (0.30 y 0.30); antes el fondo desaparecía primero y las teclas quedaban encima |
 | `pnpm test` / `typecheck` / `smoke` | ✅ 69 tests, sin restos al desactivar |
+
+## v0.3.0: multimonitor y preferencias en pestañas
+
+**Fecha:** 2026-09-25
+**Resultado:** ✅ aprobada por el usuario
+
+| Comprobación | Resultado |
+|---|---|
+| Tests de monitores (conector → índice, respaldo al principal, conector a guardar, lectura de `DisplayConfig`) | ✅ 77 tests |
+| Dos monitores simulados en la Shell anidada | ✅ Primary → x=176 (monitor 1); `LVDS2` → x=1456 (monitor 2); `HDMI-9` desconectado → monitor principal; `LVDS2` + posición personalizada (1, 0) → 1632,0 |
+| Preferencias en pestañas (General, Appearance, Layout) | ✅ capturas de cada pestaña, incluido un monitor desconectado |
+| Elegir monitor, arrastrar entre pantallas, desconectar y restaurar con monitores reales | ✅ validado por el usuario |
+| `smoke` | ✅ sin restos al desactivar |
