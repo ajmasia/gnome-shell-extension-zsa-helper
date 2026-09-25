@@ -166,6 +166,7 @@ export default class ZsaHelperExtension extends Extension {
             this.reportUnknownKeycodes(layout);
             this.hasLayout = true;
             this.overlay?.setLayout(layout);
+            this.runDevScreenshots(layout);
         } catch (e) {
             if (request !== this.layoutRequest) {
                 return;
@@ -179,6 +180,17 @@ export default class ZsaHelperExtension extends Extension {
                 console.error(`[zsa-helper] failed to load layout: ${e}`);
             }
         }
+    }
+
+    /** Development only: see src/dev/screenshots.ts. */
+    private runDevScreenshots(layout: Layout): void {
+        const dir = GLib.getenv('ZSA_HELPER_SCREENSHOT_DIR');
+        if (!dir) {
+            return;
+        }
+        import('./dev/screenshots.js')
+            .then(({ captureLayers }) => this.overlay && captureLayers(this.overlay, layout, dir))
+            .catch(e => console.error(`[zsa-helper] screenshots failed: ${e}`));
     }
 
     private reportUnknownKeycodes(layout: Layout): void {
