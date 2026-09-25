@@ -14,6 +14,8 @@ import { VoyagerDevice, type DeviceState } from './device/voyager-device.js';
 import { LayoutService, LayoutUnavailableError } from './layout/layout-service.js';
 import { OryxApiClient } from './layout/oryx-api.js';
 import { MonitorDirectory } from './lib/monitors.js';
+import { StatusService } from './lib/status-service.js';
+import { isVoyager } from './core/status.js';
 import { KeyboardOverlay } from './ui/keyboard-overlay.js';
 
 const TOGGLE_KEY = 'toggle-overlay';
@@ -43,10 +45,14 @@ export default class ZsaHelperExtension extends Extension {
     private layoutRequest = 0;
     private hasLayout = false;
     private debug = false;
+    private status: StatusService | null = null;
+    /** Set when a ZSA keyboard other than the Voyager is connected: its events are ignored. */
+    private unsupported = false;
 
     enable(): void {
         this.debug = GLib.getenv('ZSA_HELPER_DEBUG') !== null;
         this.settings = this.getSettings();
+        this.status = new StatusService();
         this.monitors = new MonitorDirectory();
         this.overlay = new KeyboardOverlay(([x, y], monitor) => {
             // Store the dropped monitor and place and switch to them; applyAppearance() then keeps
@@ -115,10 +121,13 @@ export default class ZsaHelperExtension extends Extension {
         this.visibility = null;
         this.overlay?.destroy();
         this.overlay = null;
+        this.status?.destroy();
+        this.status = null;
 
         this.settings = null;
         this.firmware = null;
         this.hasLayout = false;
+        this.unsupported = false;
         this.layoutRequest++;
     }
 
@@ -134,7 +143,12 @@ export default class ZsaHelperExtension extends Extension {
 
     private connectDevice(device: VoyagerDevice): void {
         device.on('state', state => this.onDeviceState(state));
+        device.on('protocol', protocol => this.status?.update({ protocol }));
         device.on('firmware', ({ layoutId, revisionId, raw }) => {
+            if (this.unsupported) {
+                return;
+            }
+            this.status?.update({ firmware: raw, oryxFirmware: Boolean(layoutId && revisionId) });
             if (!layoutId || !revisionId) {
                 this.overlay?.setStatus(`This firmware is not an Oryx layout (${raw || 'no id'}).`);
                 return;
@@ -146,6 +160,9 @@ export default class ZsaHelperExtension extends Extension {
             }
         });
         device.on('layer', layer => {
+            if (this.unsupported) {
+                return;
+            }
             const started = GLib.get_monotonic_time();
             this.visibility?.onLayer(layer);
             // Keep the layer being previewed while the HUD fades out instead of flashing the base.
@@ -156,7 +173,7 @@ export default class ZsaHelperExtension extends Extension {
         });
         device.on('keydown', ({ row, col }) => {
             const index = matrixToOryxIndex(row, col);
-            if (index !== undefined && this.settings?.get_boolean('highlight-enabled')) {
+            if (index !== undefined && !this.unsupported && this.settings?.get_boolean('highlight-enabled')) {
                 this.overlay?.pressKey(index);
             }
         });
@@ -166,20 +183,35 @@ export default class ZsaHelperExtension extends Extension {
                 this.overlay?.releaseKey(index);
             }
         });
-        device.on('warning', message => console.warn(`[zsa-helper] ${message}`));
+        device.on('warning', message => {
+            console.warn(`[zsa-helper] ${message}`);
+            this.status?.update({ lastError: message });
+        });
     }
 
     private onDeviceState(state: DeviceState): void {
+        const detached = { deviceName: null, devicePath: null, protocol: null, firmware: null, oryxFirmware: false };
+
         switch (state.status) {
             case 'searching':
+                this.unsupported = false;
+                this.status?.update({ device: 'searching', ...detached });
                 this.overlay?.setStatus('Looking for your ZSA keyboard…');
                 break;
             case 'error':
                 console.warn(`[zsa-helper] ${state.message}`);
+                this.status?.update({ device: 'permission-denied', ...detached, devicePath: state.path });
                 this.overlay?.setStatus(`No permission to read the keyboard.\nInstall ZSA's udev rule (50-zsa.rules).`);
                 break;
             case 'connected':
                 console.log(`[zsa-helper] connected to ${state.name} at ${state.path}`);
+                this.unsupported = !isVoyager(state.productId);
+                if (this.unsupported) {
+                    this.status?.update({ device: 'unsupported', ...detached, deviceName: state.name, devicePath: state.path });
+                    this.overlay?.setStatus(`${state.name} is not supported.\nZSA Helper only works with the ZSA Voyager.`);
+                    break;
+                }
+                this.status?.update({ device: 'connected', ...detached, deviceName: state.name, devicePath: state.path });
                 if (!this.hasLayout) {
                     this.overlay?.setStatus('Loading layout…');
                 }
@@ -211,6 +243,10 @@ export default class ZsaHelperExtension extends Extension {
             console.log(`[zsa-helper] layout ${layout.layoutId}/${layout.revisionId} "${layout.title}" from ${source}`);
             this.reportUnknownKeycodes(layout);
             this.hasLayout = true;
+            this.status?.update({
+                layout: { title: layout.title, layoutId: layout.layoutId, revisionId: layout.revisionId, source },
+                layoutError: null,
+            });
             this.overlay?.setLayout(layout);
             this.runDevScreenshots(layout);
         } catch (e) {
@@ -219,11 +255,13 @@ export default class ZsaHelperExtension extends Extension {
             }
             if (e instanceof LayoutUnavailableError) {
                 console.warn(`[zsa-helper] ${e.message}`);
+                this.status?.update({ layoutError: `${firmware.layoutId}/${firmware.revisionId} is not available: ${e.reasons.join('; ')}` });
                 if (!this.hasLayout) {
                     this.overlay?.setStatus('Layout not available: Oryx is unreachable and it is not cached.');
                 }
             } else if (!(e instanceof GLib.Error && e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))) {
                 console.error(`[zsa-helper] failed to load layout: ${e}`);
+                this.status?.update({ lastError: `Failed to load the layout: ${e}` });
             }
         }
     }
