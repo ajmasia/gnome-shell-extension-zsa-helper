@@ -65,7 +65,7 @@ app.connect('activate', () => {
 
     (async () => {
         await wait(800);
-        for (const name of ['general', 'appearance', 'layout']) {
+        for (const name of ['general', 'appearance', 'status']) {
             window.set_visible_page_name(name);
             await wait(300);
             capture(window, `${dir}/prefs-${name}.png`);
