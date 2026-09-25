@@ -1,3 +1,4 @@
+import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
@@ -29,6 +30,8 @@ export default class ZsaHelperExtension extends Extension {
     private settings: Gio.Settings | null = null;
     private settingsHandlers: number[] = [];
     private monitorsHandler = 0;
+    private keymap: Clutter.Keymap | null = null;
+    private keymapHandler = 0;
     private overlay: KeyboardOverlay | null = null;
     private visibility: VisibilityController | null = null;
     private device: VoyagerDevice | null = null;
@@ -55,6 +58,7 @@ export default class ZsaHelperExtension extends Extension {
         this.connectSettings(this.settings);
 
         this.monitorsHandler = Main.layoutManager.connect('monitors-changed', () => this.overlay?.relayout());
+        this.watchLocks();
         Main.wm.addKeybinding(
             TOGGLE_KEY,
             this.settings,
@@ -75,6 +79,11 @@ export default class ZsaHelperExtension extends Extension {
             Main.layoutManager.disconnect(this.monitorsHandler);
             this.monitorsHandler = 0;
         }
+        if (this.keymap && this.keymapHandler) {
+            this.keymap.disconnect(this.keymapHandler);
+        }
+        this.keymap = null;
+        this.keymapHandler = 0;
         for (const id of this.settingsHandlers) {
             this.settings?.disconnect(id);
         }
@@ -94,6 +103,16 @@ export default class ZsaHelperExtension extends Extension {
         this.firmware = null;
         this.hasLayout = false;
         this.layoutRequest++;
+    }
+
+    /** Mirrors the host's Caps Lock and Num Lock on the LEDs of the matching keys. */
+    private watchLocks(): void {
+        const keymap = Clutter.get_default_backend().get_default_seat().get_keymap();
+        const update = () =>
+            this.overlay?.setLockState({ caps: keymap.get_caps_lock_state(), num: keymap.get_num_lock_state() });
+        this.keymap = keymap;
+        this.keymapHandler = keymap.connect('state-changed', update);
+        update();
     }
 
     private connectDevice(device: VoyagerDevice): void {
