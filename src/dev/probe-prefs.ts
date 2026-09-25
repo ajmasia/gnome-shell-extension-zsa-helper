@@ -23,6 +23,16 @@ if (!schema) {
 }
 const settings = new Gio.Settings({ settings_schema: schema!, backend: Gio.memory_settings_backend_new() });
 
+/** version-name from the built metadata.json, so captures show the real version. */
+function extensionVersion(): string {
+    try {
+        const [, contents] = GLib.file_get_contents(GLib.build_filenamev([here, '..', 'metadata.json']));
+        return JSON.parse(new TextDecoder().decode(contents))['version-name'] ?? 'dev';
+    } catch {
+        return 'dev';
+    }
+}
+
 function capture(window: Gtk.Widget, path: string): void {
     const width = window.get_width();
     const height = window.get_height();
@@ -41,7 +51,7 @@ function capture(window: Gtk.Widget, path: string): void {
 const app = new Adw.Application({ application_id: 'dev.zsahelper.PrefsProbe', flags: Gio.ApplicationFlags.NON_UNIQUE });
 app.connect('activate', () => {
     const window = new Adw.PreferencesWindow({ application: app });
-    buildPreferences(window, settings, 'probe');
+    buildPreferences(window, settings, extensionVersion());
     window.present();
 
     GLib.mkdir_with_parents(dir, 0o755);
