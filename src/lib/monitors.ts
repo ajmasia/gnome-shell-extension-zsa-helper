@@ -1,6 +1,17 @@
+import GLib from 'gi://GLib';
 import Gio from './gio.js';
-import { isCancelled } from './errors.js';
+import { errorMessage, isCancelled } from './errors.js';
 import { activeConnectors, connectorToStore, resolveMonitorIndex } from '../core/monitors.js';
+
+/** Delays between retries when Mutter cannot list the monitors; then it waits for the next change. */
+const RETRY_DELAYS_MS = [1000, 3000, 10000];
+
+export interface MonitorDirectoryCallbacks {
+    /** The list of connectors changed (after a refresh or a successful retry). */
+    onUpdated?: () => void;
+    /** Listing failed; `null` once it works again. */
+    onError?: (message: string | null) => void;
+}
 
 /**
  * Translates between monitor indices, which the Shell uses, and connectors (`DP-1`…), which are
@@ -10,9 +21,17 @@ import { activeConnectors, connectorToStore, resolveMonitorIndex } from '../core
 export class MonitorDirectory {
     private connectors: string[] = [];
     private cancellable = new Gio.Cancellable();
+    private retryTimer = 0;
+    private attempt = 0;
 
-    /** Reloads the connectors of the active monitors; call it again after `monitors-changed`. */
+    constructor(private readonly callbacks: MonitorDirectoryCallbacks = {}) {}
+
+    /**
+     * Reloads the connectors of the active monitors; call it again after `monitors-changed`.
+     * On failure it retries a few times and reports the error.
+     */
     async refresh(): Promise<void> {
+        this.clearRetry();
         try {
             const reply = await Gio.DBus.session.call(
                 'org.gnome.Mutter.DisplayConfig',
@@ -26,10 +45,19 @@ export class MonitorDirectory {
                 this.cancellable,
             );
             this.connectors = activeConnectors(reply.deepUnpack());
-        } catch (e) {
-            if (!isCancelled(e)) {
-                console.warn(`[zsa-helper] cannot list monitors: ${e}`);
+            if (this.attempt > 0) {
+                this.callbacks.onError?.(null);
             }
+            this.attempt = 0;
+            this.callbacks.onUpdated?.();
+        } catch (e) {
+            if (isCancelled(e)) {
+                return;
+            }
+            const message = `Cannot list monitors: ${errorMessage(e)}`;
+            console.warn(`[zsa-helper] ${message}`);
+            this.callbacks.onError?.(message);
+            this.scheduleRetry();
         }
     }
 
@@ -45,10 +73,29 @@ export class MonitorDirectory {
 
     destroy(): void {
         this.cancellable.cancel();
+        this.clearRetry();
+    }
+
+    private scheduleRetry(): void {
+        const delay = RETRY_DELAYS_MS[this.attempt++];
+        if (delay === undefined) {
+            return;
+        }
+        this.retryTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, delay, () => {
+            this.retryTimer = 0;
+            void this.refresh();
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    private clearRetry(): void {
+        if (this.retryTimer) {
+            GLib.Source.remove(this.retryTimer);
+            this.retryTimer = 0;
+        }
     }
 
     private lookup(connector: string): number {
         return global.backend.get_monitor_manager().get_monitor_for_connector(connector);
     }
 }
-

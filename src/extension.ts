@@ -54,7 +54,16 @@ export default class ZsaHelperExtension extends Extension {
         this.debug = GLib.getenv('ZSA_HELPER_DEBUG') !== null;
         this.settings = this.getSettings();
         this.status = new StatusService();
-        this.monitors = new MonitorDirectory();
+        this.monitors = new MonitorDirectory({
+            onUpdated: () => this.scheduleAppearance(),
+            onError: message => {
+                if (message) {
+                    this.status?.update({ lastError: message });
+                } else if (this.status?.current.lastError?.startsWith('Cannot list monitors')) {
+                    this.status.update({ lastError: null });
+                }
+            },
+        });
         this.overlay = new KeyboardOverlay(([x, y], monitor) => {
             // Store the dropped monitor and place and switch to them; applyAppearance() then keeps
             // the overlay there.
@@ -344,12 +353,7 @@ export default class ZsaHelperExtension extends Extension {
      */
     private onMonitorsChanged(): void {
         this.overlay?.relayout();
-        const monitors = this.monitors;
-        monitors?.refresh().then(() => {
-            if (monitors === this.monitors) {
-                this.scheduleAppearance();
-            }
-        });
+        void this.monitors?.refresh();
     }
 
     /**
