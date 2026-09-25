@@ -9,7 +9,7 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["@girs/gjs", "@girs/gjs/dom", "@girs/gnome-shell/ambient", "@girs/gnome-shell/extensions/global"]
+    "types": ["@girs/gjs", "@girs/gjs/dom", "@girs/glibunix-2.0/ambient", "@girs/gnome-shell/ambient", "@girs/gnome-shell/extensions/global"]
   },
   "include": ["src/**/*.ts", "src/types/**/*.d.ts"]
 }
