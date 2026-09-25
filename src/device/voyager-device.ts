@@ -16,7 +16,7 @@ import { findZsaRawHid } from './discovery.js';
 export type DeviceState =
     | { status: 'stopped' }
     | { status: 'searching' }
-    | { status: 'connected'; path: string; name: string }
+    | { status: 'connected'; path: string; name: string; productId: number | null }
     | { status: 'error'; reason: 'permission'; path: string; message: string };
 
 export interface DeviceEvents extends Record<string, unknown> {
@@ -136,7 +136,7 @@ export class VoyagerDevice extends Emitter<DeviceEvents> {
             }
 
             this.retryAttempt = 0;
-            this.setState({ status: 'connected', path: device.path, name: device.name });
+            this.setState({ status: 'connected', path: device.path, name: device.name, productId: device.productId });
             void this.readLoop(this.stream, cancellable);
             await this.handshake();
         } catch (e) {

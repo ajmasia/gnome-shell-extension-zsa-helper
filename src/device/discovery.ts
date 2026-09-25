@@ -1,6 +1,6 @@
 import GLib from 'gi://GLib';
 import Gio from '../lib/gio.js';
-import { hidName, isZsaRawHid } from '../core/oryx/hid-match.js';
+import { hidName, hidProductId, isZsaRawHid } from '../core/oryx/hid-match.js';
 
 const HIDRAW_CLASS_DIR = '/sys/class/hidraw';
 
@@ -9,6 +9,8 @@ export interface RawHidDevice {
     path: string;
     /** Product name, e.g. `ZSA Technology Labs Voyager`. */
     name: string;
+    /** USB product id, e.g. 0x1977 for the Voyager. */
+    productId: number | null;
 }
 
 /** Finds the Oryx raw HID interface of a connected ZSA keyboard, if any. */
@@ -31,7 +33,7 @@ export async function findZsaRawHid(cancellable: Gio.Cancellable | null = null):
             const [descriptor] = await device.get_child('report_descriptor').load_contents_async(cancellable);
             const ueventText = new TextDecoder().decode(uevent);
             if (isZsaRawHid(ueventText, descriptor)) {
-                return { path: `/dev/${name}`, name: hidName(ueventText) ?? 'ZSA keyboard' };
+                return { path: `/dev/${name}`, name: hidName(ueventText) ?? 'ZSA keyboard', productId: hidProductId(ueventText) };
             }
         } catch (e) {
             if (e instanceof GLib.Error && e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)) {
