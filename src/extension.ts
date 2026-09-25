@@ -36,8 +36,10 @@ export default class ZsaHelperExtension extends Extension {
     private firmware: { layoutId: string; revisionId: string } | null = null;
     private layoutRequest = 0;
     private hasLayout = false;
+    private debug = false;
 
     enable(): void {
+        this.debug = GLib.getenv('ZSA_HELPER_DEBUG') !== null;
         this.settings = this.getSettings();
         this.overlay = new KeyboardOverlay();
         this.visibility = new VisibilityController(this.visibilityConfig(), glibScheduler, visible =>
@@ -108,9 +110,13 @@ export default class ZsaHelperExtension extends Extension {
             }
         });
         device.on('layer', layer => {
+            const started = GLib.get_monotonic_time();
             this.visibility?.onLayer(layer);
             // Keep the layer being previewed while the HUD fades out instead of flashing the base.
             this.overlay?.showLayer(layer, { defer: this.visibility?.hidingToBase ?? false });
+            if (this.debug && this.visibility?.visible) {
+                this.logPaintLatency(layer, started);
+            }
         });
         device.on('keydown', ({ row, col }) => {
             const index = matrixToOryxIndex(row, col);
@@ -195,6 +201,17 @@ export default class ZsaHelperExtension extends Extension {
         import('./dev/screenshots.js')
             .then(({ captureLayers }) => this.overlay && captureLayers(this.overlay, layout, dir))
             .catch(e => console.error(`[zsa-helper] screenshots failed: ${e}`));
+    }
+
+    /** With ZSA_HELPER_DEBUG set, logs how long a layer change takes to reach the screen. */
+    private logPaintLatency(layer: number, started: number): void {
+        const stage = global.stage;
+        const handler = stage.connect('after-paint', () => {
+            stage.disconnect(handler);
+            const ms = (GLib.get_monotonic_time() - started) / 1000;
+            console.log(`[zsa-helper] layer ${layer} painted in ${ms.toFixed(1)} ms`);
+        });
+        stage.queue_redraw();
     }
 
     private reportUnknownKeycodes(layout: Layout): void {
