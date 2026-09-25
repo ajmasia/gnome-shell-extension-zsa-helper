@@ -1,5 +1,6 @@
 import GLib from 'gi://GLib';
-import Gio from './gio.js';
+import Gio from '../lib/gio.js';
+import { errorMessage, isCancelled } from '../lib/errors.js';
 import { Emitter } from '../core/emitter.js';
 import {
     buildCommand,
@@ -305,12 +306,4 @@ export class VoyagerDevice extends Emitter<DeviceEvents> {
         this.state = state;
         this.emit('state', state);
     }
-}
-
-function isCancelled(e: unknown): boolean {
-    return e instanceof GLib.Error && e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED);
-}
-
-function errorMessage(e: unknown): string {
-    return e instanceof Error || e instanceof GLib.Error ? e.message : String(e);
 }

@@ -1,5 +1,5 @@
 import GLib from 'gi://GLib';
-import Gio from './gio.js';
+import Gio from '../lib/gio.js';
 import { hidName, isZsaRawHid } from '../core/oryx/hid-match.js';
 
 const HIDRAW_CLASS_DIR = '/sys/class/hidraw';
