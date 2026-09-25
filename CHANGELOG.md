@@ -7,6 +7,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-25
+
+### Fixed
+
+- The overlay fades out as a single image. Before, the panel background vanished first and the
+  keys lingered on their own for a moment.
+
 ## [0.2.0] - 2026-09-25
 
 ### Added
