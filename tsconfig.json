@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["@girs/gjs", "@girs/gjs/dom", "@girs/gnome-shell/ambient", "@girs/gnome-shell/extensions/global"]
+  },
+  "include": ["src/**/*.ts", "src/types/**/*.d.ts"]
+}

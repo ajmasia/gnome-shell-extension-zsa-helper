@@ -1,0 +1,25 @@
+{
+  "name": "zsa-helper",
+  "version": "0.0.0",
+  "description": "GNOME Shell extension that shows a floating overlay with the active layer of a ZSA Voyager keyboard",
+  "type": "module",
+  "private": true,
+  "license": "GPL-3.0-or-later",
+  "author": "Antonio Masiá <ajmasia.dev@ysnp.link>",
+  "scripts": {
+    "build": "tsc && node scripts/copy-assets.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "install:local": "bash scripts/install.sh",
+    "nested": "bash scripts/nested.sh",
+    "smoke": "bash scripts/nested.sh --smoke"
+  },
+  "devDependencies": {
+    "@girs/gjs": "4.9.0",
+    "@girs/gnome-shell": "48.0.4",
+    "@girs/soup-3.0": "3.6.5-4.0.0-beta.34",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  }
+}
