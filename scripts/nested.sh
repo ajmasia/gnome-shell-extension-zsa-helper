@@ -2,7 +2,8 @@
 # Runs a nested GNOME Shell (Wayland) to test the extension without logging out.
 #
 # Settings are isolated in a dedicated dconf database (~/.config/dconf/zsa_helper_nested),
-# so enabling the extension here never touches the real session.
+# so enabling the extension here never touches the real session. The extension is loaded from
+# dist/ through a private data directory, whatever is installed for the user.
 #
 # Usage:
 #   pnpm nested            interactive nested shell with the extension enabled
@@ -19,6 +20,16 @@ trap 'rm -rf "$workdir"' EXIT
 printf 'user-db:zsa_helper_nested\n' > "$workdir/profile"
 
 export DCONF_PROFILE="$workdir/profile"
+
+# Load the extension from dist/, never from the user's installed copy. ZSA_NESTED_DATA_HOME
+# overrides this to test another installation, e.g. one made from the packed zip.
+if [[ -n "${ZSA_NESTED_DATA_HOME:-}" ]]; then
+    export XDG_DATA_HOME="$ZSA_NESTED_DATA_HOME"
+else
+    mkdir -p "$workdir/data/gnome-shell/extensions"
+    ln -s "$(pwd)/dist" "$workdir/data/gnome-shell/extensions/$uuid"
+    export XDG_DATA_HOME="$workdir/data"
+fi
 export MUTTER_DEBUG_DUMMY_MODE_SPECS="${RES:-1600x900}"
 export UUID="$uuid" MODE="${1:-}" LOG="$workdir/shell.log"
 if [[ "$MODE" == "--shots" ]]; then
