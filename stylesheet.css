@@ -70,6 +70,12 @@
     color: rgba(255, 255, 255, 0.22);
 }
 
+/* Lit while the lock this key toggles (Caps Lock, Num Lock) is on. Size and inset come from code. */
+.zsa-key-led {
+    background-color: #57e389;
+    box-shadow: 0 0 4px 1px rgba(87, 227, 137, 0.6);
+}
+
 .zsa-key-pressed,
 .zsa-key-pressed.zsa-key--inherited {
     background-color: #3584e4;

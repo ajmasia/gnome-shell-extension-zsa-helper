@@ -5,7 +5,7 @@ import { VOYAGER_HEIGHT, VOYAGER_KEYS, VOYAGER_WIDTH } from '../core/geometry/vo
 import { resolveKeyLabel } from '../core/labels/resolve.js';
 import type { Layout } from '../core/layout/model.js';
 import { overlayOrigin, type OverlayPosition } from '../core/positioning.js';
-import { KeyCap } from './key-cap.js';
+import { KeyCap, type LockState } from './key-cap.js';
 
 /** Key size and gap in logical pixels at scale 1. */
 const KEY_SIZE = 50;
@@ -108,6 +108,13 @@ export class KeyboardOverlay {
             this.render();
         }
         this.reposition();
+    }
+
+    /** Updates the LEDs of lock keys (Caps Lock, Num Lock). */
+    setLockState(locks: LockState): void {
+        for (const key of this.keys) {
+            key.setLockState(locks);
+        }
     }
 
     pressKey(index: number): void {

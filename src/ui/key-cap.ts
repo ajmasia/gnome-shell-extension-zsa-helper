@@ -1,7 +1,9 @@
 import Clutter from 'gi://Clutter';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
-import type { KeyLabel } from '../core/labels/resolve.js';
+import type { KeyLabel, LockKind } from '../core/labels/resolve.js';
+
+export type LockState = Readonly<Record<LockKind, boolean>>;
 
 const KIND_CLASSES = ['zsa-key--char', 'zsa-key--action', 'zsa-key--layer', 'zsa-key--modifier', 'zsa-key--empty'];
 
@@ -11,20 +13,44 @@ const MAIN_FONT_SMALL = 12;
 const MAIN_FONT_TINY = 10;
 const SUB_FONT = 9;
 const SWATCH_FONT = 13;
+/** Lock indicator LED size and inset from the top-right corner, in px at scale 1. */
+const LED_SIZE = 6;
+const LED_INSET = 5;
 
-/** One key of the overlay: a main label and an optional secondary label below it. */
+/**
+ * One key of the overlay: a main label, an optional secondary label below it and, for lock keys
+ * such as Caps Lock, an LED in the corner that lights up while the lock is on.
+ */
 export class KeyCap {
-    readonly actor: St.BoxLayout;
+    readonly actor: St.Widget;
+    private readonly labels: St.BoxLayout;
     private readonly main: St.Label;
     private readonly sub: St.Label;
+    private readonly led: St.Widget;
     private label: KeyLabel | null = null;
+    private locks: LockState = { caps: false, num: false };
     private scale = 1;
 
     constructor() {
-        this.actor = new St.BoxLayout({
+        // BinLayout stacks the labels and the LED, so the LED never pushes the labels around.
+        this.actor = new St.Widget({
             style_class: 'zsa-key',
-            orientation: Clutter.Orientation.VERTICAL,
+            layout_manager: new Clutter.BinLayout(),
             reactive: false,
+        });
+        this.labels = new St.BoxLayout({
+            orientation: Clutter.Orientation.VERTICAL,
+            x_expand: true,
+            y_expand: true,
+        });
+        this.led = new St.Widget({
+            style_class: 'zsa-key-led',
+            // BinLayout only honours the alignment of children that expand.
+            x_expand: true,
+            y_expand: true,
+            x_align: Clutter.ActorAlign.END,
+            y_align: Clutter.ActorAlign.START,
+            visible: false,
         });
         this.main = new St.Label({
             style_class: 'zsa-key-main',
@@ -41,8 +67,10 @@ export class KeyCap {
             x_align: Clutter.ActorAlign.CENTER,
             y_align: Clutter.ActorAlign.END,
         });
-        this.actor.add_child(this.main);
-        this.actor.add_child(this.sub);
+        this.labels.add_child(this.main);
+        this.labels.add_child(this.sub);
+        this.actor.add_child(this.labels);
+        this.actor.add_child(this.led);
     }
 
     setLabel(label: KeyLabel): void {
@@ -62,6 +90,13 @@ export class KeyCap {
             this.actor.remove_style_class_name('zsa-key--inherited');
         }
         this.applyFonts();
+        this.updateLed();
+    }
+
+    /** Lights the LED when this key toggles a lock that is currently on. */
+    setLockState(locks: LockState): void {
+        this.locks = locks;
+        this.updateLed();
     }
 
     /** Places the key in its parent and sizes it; all values are already in actor pixels. */
@@ -80,6 +115,11 @@ export class KeyCap {
         }
     }
 
+    private updateLed(): void {
+        const lock = this.label?.lock;
+        this.led.visible = lock !== undefined && this.locks[lock];
+    }
+
     private applyFonts(): void {
         const length = [...(this.label?.main ?? '')].length;
         const base = length <= 2 ? MAIN_FONT : length <= 5 ? MAIN_FONT_SMALL : MAIN_FONT_TINY;
@@ -88,5 +128,10 @@ export class KeyCap {
         this.sub.style = swatch
             ? `font-size: ${Math.round(SWATCH_FONT * this.scale)}px; color: ${swatch};`
             : `font-size: ${Math.round(SUB_FONT * this.scale)}px;`;
+
+        const led = Math.max(4, Math.round(LED_SIZE * this.scale));
+        const inset = Math.round((LED_INSET - 3) * this.scale);
+        this.led.set_size(led, led);
+        this.led.style = `border-radius: ${led / 2}px; margin: ${inset}px ${inset}px 0 0;`;
     }
 }
