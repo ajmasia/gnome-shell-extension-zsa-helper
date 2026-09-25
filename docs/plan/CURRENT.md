@@ -1,1 +1,1 @@
-See @docs/plan/phase-6-preferences.md
+See @docs/plan/phase-7-release.md
