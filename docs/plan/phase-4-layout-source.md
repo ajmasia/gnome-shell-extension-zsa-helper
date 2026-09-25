@@ -30,6 +30,19 @@ a mano.
 - Todo es asíncrono: `Soup.Session.send_and_read_async` y `Gio.File.load_contents_async` /
   `replace_contents_async`.
 
+## Notas de implementación
+
+- La sonda admite además `--clear` (borra la caché propia antes de cargar). Las pasadas de la
+  verificación quedan así:
+  1. `--clear` → `source=oryx-api`.
+  2. Sin flags → `source=cache`.
+  3. `--clear --offline` → `source=keymapp`.
+- `--offline` apunta el cliente a `http://127.0.0.1:9/graphql` (conexión rechazada).
+- Una revisión inexistente hace que Oryx responda
+  `Cannot return null for non-nullable field Layout.revision`, que se trata como "no disponible".
+- La única E/S síncrona es `make_directory_with_parents`, una vez por escritura en caché; Gio no
+  tiene una variante asíncrona "with parents".
+
 ## Tasks
 
 ### Fuentes
