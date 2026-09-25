@@ -1,1 +1,1 @@
-See @docs/plan/phase-3-device.md
+See @docs/plan/phase-4-layout-source.md
