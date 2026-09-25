@@ -1,14 +1,14 @@
 /* Floating keyboard overlay. Sizes of keys and fonts are set from code to follow the scale. */
 
 .zsa-overlay {
-    /* Matches an unfocused libadwaita window in GNOME 48 (window.csd:backdrop): window background,
-       15px radius, a 7% white outline and the main backdrop shadow layer. St supports only one
-       shadow, and the overlay never has focus. */
+    /* Looks like a libadwaita window in GNOME 48: window background, 15px radius and a 7% white
+       outline. GTK spreads its window shadow over five faint layers; St draws only one, and any
+       spread shows as a dark halo, so keep a single barely visible layer. */
     background-color: #222226;
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 15px;
     padding: 12px 18px 18px;
-    box-shadow: 0 1px 3px 3px rgba(0, 0, 0, 0.09);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.12);
 }
 
 .zsa-overlay-header {
