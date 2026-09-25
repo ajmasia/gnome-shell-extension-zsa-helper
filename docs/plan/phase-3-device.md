@@ -25,6 +25,20 @@ reconectar el USB muestra `disconnected` → `connected` sin reiniciar el script
   suspensión). Siempre hay que reemparejar al reabrir.
 - Todo debe ser asíncrono y cancelable (`Gio.Cancellable`), porque correrá en el hilo de la Shell.
 
+## Notas de implementación
+
+- **Escrituras:** hay que usar `write_bytes_async(new GLib.Bytes(report))`, no `write_all_async(Uint8Array)`.
+  Con la segunda, GJS puede liberar el buffer antes de que termine la escritura asíncrona y el
+  teclado recibe basura: responde `ERROR 0xFF` (comando desconocido) a todo. En las primeras
+  pruebas los eventos llegaban igualmente porque Keymapp emparejaba por su cuenta, lo que
+  ocultaba el fallo.
+- **Keymapp** reacciona a nuestro `FW_VERSION` con su propio emparejamiento y consulta de
+  versión; por eso algunos eventos llegan duplicados. Es inocuo.
+- **Tipos `@girs`:** están fijados al conjunto `*-4.0.0-beta.36` (GLib 2.84 / Mutter 16) con
+  `pnpm.overrides`. Sin eso, `gi://GLib` se resolvía a GLib 2.89 y faltaban APIs.
+- **Suspensión:** además del monitor de `/dev`, se escucha `PrepareForSleep` de logind y al
+  reanudar se repite el handshake.
+
 ## Tasks
 
 ### Descubrimiento
