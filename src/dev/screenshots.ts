@@ -42,6 +42,8 @@ export async function captureLayers(overlay: KeyboardOverlay, layout: Layout, di
         await capture(overlay, `${dir}/layer-${layer.index}-${layer.title.replace(/[^A-Za-z0-9]+/g, '_')}.png`);
     }
 
+    await measureLayerLatency(overlay, layout);
+
     overlay.showLayer(0);
     const pressed = [7, 13, 24, 51];
     pressed.forEach(i => overlay.pressKey(i));
@@ -58,4 +60,26 @@ export async function captureLayers(overlay: KeyboardOverlay, layout: Layout, di
     await wait(200);
 
     GLib.file_set_contents(`${dir}/done`, 'ok');
+}
+
+/** Time from a layer change to the end of the next painted frame, over 30 changes. */
+async function measureLayerLatency(overlay: KeyboardOverlay, layout: Layout): Promise<void> {
+    const samples: number[] = [];
+    for (let i = 0; i < 30; i++) {
+        const layer = layout.layers[(i + 1) % layout.layers.length]!.index;
+        const started = GLib.get_monotonic_time();
+        await new Promise<void>(resolve => {
+            const handler = global.stage.connect('after-paint', () => {
+                global.stage.disconnect(handler);
+                resolve();
+            });
+            overlay.showLayer(layer);
+            global.stage.queue_redraw();
+        });
+        samples.push((GLib.get_monotonic_time() - started) / 1000);
+        await wait(20);
+    }
+    samples.sort((a, b) => a - b);
+    const median = samples[Math.floor(samples.length / 2)]!;
+    console.log(`[zsa-helper] layer change to paint: median ${median.toFixed(1)} ms, max ${samples.at(-1)!.toFixed(1)} ms`);
 }
