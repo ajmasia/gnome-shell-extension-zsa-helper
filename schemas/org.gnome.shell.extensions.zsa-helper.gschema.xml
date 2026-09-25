@@ -7,6 +7,7 @@
     <value nick="bottom-right" value="3"/>
     <value nick="top-left" value="4"/>
     <value nick="top-right" value="5"/>
+    <value nick="custom" value="6"/>
   </enum>
 
   <schema id="org.gnome.shell.extensions.zsa-helper" path="/org/gnome/shell/extensions/zsa-helper/">
@@ -40,7 +41,17 @@
     <key name="position" enum="org.gnome.shell.extensions.zsa-helper.Position">
       <default>'bottom-center'</default>
       <summary>Overlay position</summary>
-      <description>Where the overlay is placed on the primary monitor.</description>
+      <description>Where the overlay is placed on the primary monitor; 'custom' uses the dragged position.</description>
+    </key>
+    <key name="allow-dragging" type="b">
+      <default>false</default>
+      <summary>Move the overlay by dragging</summary>
+      <description>Let the overlay be dragged with the mouse while it is shown. While enabled, the overlay receives clicks instead of letting them through.</description>
+    </key>
+    <key name="custom-position" type="(dd)">
+      <default>(0.5, 1.0)</default>
+      <summary>Dragged overlay position</summary>
+      <description>Where the overlay was dragged to, as fractions (0–1) of the free space in the work area. Used when position is 'custom'.</description>
     </key>
     <key name="opacity" type="d">
       <range min="0.3" max="1.0"/>

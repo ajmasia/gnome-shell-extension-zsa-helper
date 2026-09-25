@@ -11,6 +11,7 @@ const POSITIONS: [OverlayPosition, string][] = [
     ['bottom-right', 'Bottom right'],
     ['top-left', 'Top left'],
     ['top-right', 'Top right'],
+    ['custom', 'Custom (dragged)'],
 ];
 
 /**
@@ -24,7 +25,7 @@ export function buildPreferences(window: Adw.PreferencesWindow, settings: Gio.Se
     page.add(appearanceGroup(settings));
     page.add(layoutGroup(settings, version));
     window.add(page);
-    window.set_default_size(620, 880);
+    window.set_default_size(620, 1000);
 }
 
 function shortcutGroup(settings: Gio.Settings): Adw.PreferencesGroup {
@@ -74,6 +75,29 @@ function appearanceGroup(settings: Gio.Settings): Adw.PreferencesGroup {
     });
     track(position, settings, 'position', syncPosition);
     group.add(position);
+
+    const dragging = new Adw.SwitchRow({
+        title: 'Move by dragging',
+        subtitle: 'Drag the overlay with the mouse while it is shown. It then takes clicks instead of passing them through',
+    });
+    settings.bind('allow-dragging', dragging, 'active', Gio.SettingsBindFlags.DEFAULT);
+    group.add(dragging);
+
+    const reset = new Adw.ActionRow({ title: 'Reset position', subtitle: 'Go back to the default place' });
+    const resetButton = new Gtk.Button({ label: 'Reset', valign: Gtk.Align.CENTER });
+    resetButton.connect('clicked', () => {
+        settings.reset('position');
+        settings.reset('custom-position');
+    });
+    const syncReset = () => {
+        resetButton.sensitive = settings.get_user_value('position') !== null || settings.get_user_value('custom-position') !== null;
+    };
+    syncReset();
+    track(resetButton, settings, 'position', syncReset);
+    track(resetButton, settings, 'custom-position', syncReset);
+    reset.add_suffix(resetButton);
+    reset.activatable_widget = resetButton;
+    group.add(reset);
 
     group.add(doubleSpinRow(settings, 'opacity', 'Opacity', 0.3, 1, 0.05, 2));
     group.add(doubleSpinRow(settings, 'scale', 'Size', 0.5, 2, 0.1, 1));
