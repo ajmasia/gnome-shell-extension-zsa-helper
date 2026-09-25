@@ -47,7 +47,13 @@ export async function captureLayers(overlay: KeyboardOverlay, layout: Layout, di
     await wait(400);
     await capture(overlay, `${dir}/pressed.png`);
     pressed.forEach(i => overlay.releaseKey(i));
+    overlay.setLockState({ caps: false, num: false });
+
+    // A frame halfway through the fade-out: the panel and the keys must fade together.
     overlay.setVisible(false);
+    await wait(60);
+    await capture(overlay, `${dir}/fade-out.png`);
+    await wait(200);
 
     GLib.file_set_contents(`${dir}/done`, 'ok');
 }
