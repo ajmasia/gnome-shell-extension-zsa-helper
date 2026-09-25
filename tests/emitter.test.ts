@@ -29,3 +29,19 @@ describe('Emitter', () => {
         expect(layers).toEqual([]);
     });
 });
+
+describe('Emitter error isolation', () => {
+    it('keeps calling other listeners when one throws, and reports the error', () => {
+        const errors: unknown[] = [];
+        const emitter = new Emitter<{ layer: number }>((error, event) => errors.push([event, (error as Error).message]));
+        const layers: number[] = [];
+        emitter.on('layer', () => {
+            throw new Error('render failed');
+        });
+        emitter.on('layer', layer => layers.push(layer));
+
+        expect(() => emitter.emit('layer', 3)).not.toThrow();
+        expect(layers).toEqual([3]);
+        expect(errors).toEqual([['layer', 'render failed']]);
+    });
+});
