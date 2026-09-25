@@ -4,7 +4,7 @@ A GNOME Shell extension that shows a floating overlay with the characters of the
 of your [ZSA Voyager](https://www.zsa.io/voyager). It is meant to help while you learn your
 layers: press a shortcut, or just hold a layer key, and see what every key does right now.
 
-> **Status:** early development (`0.0.x`). The overlay works; a preferences window is next. See [the plan](docs/plan/) for the roadmap.
+> **Status:** early development (`0.0.x`). The overlay and its preferences work; packaging is next. See [the plan](docs/plan/) for the roadmap.
 
 ## Requirements
 
@@ -37,6 +37,8 @@ gnome-extensions enable zsa-helper@ajmasia
   the base layer.
 - **`Super+Alt+K`:** pin or unpin the overlay.
 - Pressed keys light up on the overlay, so you can find where a character lives.
+- **Preferences** (`gnome-extensions prefs zsa-helper@ajmasia`): shortcut, automatic HUD and its
+  delays, position, opacity, size, key highlighting, and a button to download the layout again.
 
 ## Development
 
@@ -48,6 +50,7 @@ gnome-extensions enable zsa-helper@ajmasia
 | `pnpm nested` | Run a nested GNOME Shell with the extension enabled, without logging out |
 | `pnpm smoke` | Headless check that the extension enables and disables cleanly in a nested shell |
 | `pnpm nested --shots [dir]` | Capture the overlay for every layer to PNG files |
+| `pnpm probe:prefs [dir]` | Open the preferences with in-memory settings and capture them to PNG files |
 | `pnpm probe:device` | Print live events from the keyboard (layers, key presses, firmware) |
 | `pnpm probe:layout <layout> <revision>` | Load a layout revision and report its source (`--clear`, `--offline`, `--refresh`) |
 

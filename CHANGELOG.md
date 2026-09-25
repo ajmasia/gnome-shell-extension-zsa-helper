@@ -7,6 +7,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.6] - 2026-09-25
+
+### Added
+
+- Preferences window:
+  - Toggle shortcut with key capture and reset.
+  - Automatic HUD switch and its show and hide delays.
+  - Overlay position, opacity, size and key highlighting.
+  - A button to download the layout again, ignoring the cache.
+- `pnpm probe:prefs` opens the preferences with in-memory settings and captures them to PNG.
+
 ## [0.0.5] - 2026-09-25
 
 ### Added
