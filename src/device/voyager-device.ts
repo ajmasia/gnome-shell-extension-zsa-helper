@@ -1,7 +1,7 @@
 import GLib from 'gi://GLib';
 import Gio from '../lib/gio.js';
 import { errorMessage, isCancelled } from '../lib/errors.js';
-import { Emitter } from '../core/emitter.js';
+import { Emitter, type ListenerErrorHandler } from '../core/emitter.js';
 import {
     buildCommand,
     CMD_GET_FW_VERSION,
@@ -53,6 +53,11 @@ export class VoyagerDevice extends Emitter<DeviceEvents> {
     private retryTimer = 0;
     private retryAttempt = 0;
     private connecting = false;
+
+    /** `onListenerError` receives exceptions thrown by event listeners; they never stop the device. */
+    constructor(onListenerError?: ListenerErrorHandler) {
+        super(onListenerError);
+    }
 
     get currentState(): DeviceState {
         return this.state;

@@ -67,7 +67,10 @@ export default class ZsaHelperExtension extends Extension {
         );
         const version = this.metadata['version-name'] ?? 'dev';
         this.layouts = new LayoutService({ api: new OryxApiClient(undefined, `zsa-helper/${version}`) });
-        this.device = new VoyagerDevice();
+        this.device = new VoyagerDevice((error, event) => {
+            console.error(`[zsa-helper] handling "${event}" failed: ${error}`);
+            this.status?.update({ lastError: `Handling "${event}" failed: ${error}` });
+        });
 
         this.applyAppearance();
         this.overlay.setStatus('Looking for your ZSA keyboard…');
