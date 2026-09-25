@@ -30,6 +30,25 @@ aviso. Las dos validaciones pendientes del MVP quedan cerradas.
 - **Validaciones pendientes de la v0.1.0:** criterio 8 (flasheo real) y la latencia en ms
   (`ZSA_HELPER_DEBUG=1`, log `layer N painted in X ms`).
 
+## Notas de implementación
+
+- **Runner GJS:** `tests-gjs/harness.ts` (`describe`/`it`/`expect`/`waitFor`) y `tests-gjs/main.ts`,
+  que descubre los `*.test.js` compilados. `pnpm test:gjs` compila con `tsconfig.gjs-tests.json`
+  a `dist-tests/` y los ejecuta. `pnpm typecheck` también comprueba los tests GJS.
+- **`VoyagerDevice`** recibe `{environment, timings, onListenerError}`. `DeviceEnvironment`
+  (`src/device/transport.ts`) agrupa `find`/`open`/`watchHotplug`/`watchResume`, y
+  `systemEnvironment` es la implementación real. `PermissionDeniedError` sustituye a la
+  comprobación de `GLib.Error`.
+- **Los tests se han validado con mutaciones:** invertir el orden del handshake y quitar el
+  aislamiento de listeners hacen fallar 3 tests.
+- **Último layout conocido:** `LayoutCache.latestFor()` elige la revisión más reciente por fecha de
+  modificación y `LayoutService` la devuelve como `source: 'stale-cache'`. Comprobado con el sistema
+  real: `probe:layout aOa9o newRev2 --offline` → `stale-cache`, revisión `nlzDl9`.
+- **La extensión reintenta la revisión correcta** al reconectar (evento de firmware), al pulsar
+  *Refresh* y cuando `Gio.NetworkMonitor` informa de que vuelve la red.
+- **Latencia:** medida en la Shell anidada desde `showLayer()` hasta el siguiente `after-paint`, con
+  30 cambios: mediana 14,7 ms y máximo 22,3 ms. No incluye el informe USB (~1 ms).
+
 ## Tasks
 
 ### Runner de tests GJS
