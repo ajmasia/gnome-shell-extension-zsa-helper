@@ -49,3 +49,17 @@ a la tecla.
 | Suspensión y reanudación | ✅ validado por el usuario |
 | Convivencia con Keymapp | ✅ validado por el usuario |
 | `pnpm smoke` | ✅ sin regresiones |
+
+## v0.0.4: Phase 4 (obtención del layout)
+
+**Fecha:** 2026-09-25
+**Resultado:** ✅ aprobada por el usuario
+
+| Comprobación | Resultado |
+|---|---|
+| `probe:layout --clear` | ✅ `source=oryx-api` (387 ms), 5 capas × 52 teclas (ejecutado por el usuario) |
+| `probe:layout` | ✅ `source=cache` (2 ms) (ejecutado por el usuario) |
+| `probe:layout --clear --offline` | ✅ `source=keymapp` (12 ms) (ejecutado por el usuario) |
+| Revisión inexistente, con y sin red | ✅ `LayoutUnavailableError` con el motivo de cada fuente |
+| IDs inválidos | ✅ rechazados antes de tocar disco, red o SQL |
+| `pnpm test` / `typecheck` / `smoke` | ✅ 57 tests, sin regresiones |
