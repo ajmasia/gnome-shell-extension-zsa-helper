@@ -32,3 +32,20 @@ Registro de las pruebas hechas al cerrar cada fase, antes de etiquetar la versi�
 **Decisión revisada:** las teclas transparentes heredan de la capa base (ver el PRD).
 **Pendiente para la fase 3:** validar con pulsaciones reales la traducción del evento (fila, columna)
 a la tecla.
+
+## v0.0.3: Phase 3 (conexión con el teclado)
+
+**Fecha:** 2026-09-25
+**Resultado:** ✅ aprobada por el usuario
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm test` / `pnpm typecheck` | ✅ 50 tests; tipos `@girs` fijados a GNOME 48 |
+| Descubrimiento | ✅ localiza `/dev/hidraw4` por VID y descriptor raw HID |
+| Handshake | ✅ protocolo 5 y firmware `aOa9o/nlzDl9`, sin errores `0xFF` tras corregir las escrituras |
+| Emparejamiento sin Keymapp | ✅ validado por el usuario: los eventos de capa llegan con Keymapp cerrado |
+| Mapeo evento → tecla | ✅ validado por el usuario: Q, A, ESC, SPACE, Y y ENTER dan 7, 13, 0, 24, 32 y 51 |
+| Reconexión USB | ✅ validado por el usuario: `searching` → `connected` sin reiniciar |
+| Suspensión y reanudación | ✅ validado por el usuario |
+| Convivencia con Keymapp | ✅ validado por el usuario |
+| `pnpm smoke` | ✅ sin regresiones |
