@@ -158,3 +158,17 @@ Siguen pendientes de la v0.1.0: el criterio 8 (flasheo real).
 | Preferencias en pestañas (General, Appearance, Layout) | ✅ capturas de cada pestaña, incluido un monitor desconectado |
 | Elegir monitor, arrastrar entre pantallas, desconectar y restaurar con monitores reales | ✅ validado por el usuario |
 | `smoke` | ✅ sin restos al desactivar |
+
+## v0.4.0: pestaña Status y correcciones pequeñas
+
+**Fecha:** 2026-09-25
+**Resultado:** ✅ aprobada por el usuario
+
+| Comprobación | Resultado |
+|---|---|
+| Tests de estado (descripción de cada caso, distribución de teclado, identificación de la Voyager, JSON publicado) | ✅ 90 tests |
+| Estado publicado por D-Bus en la Shell anidada | ✅ `connected`, protocolo 5, firmware `aOa9o/nlzDl9`, layout desde la caché |
+| Pestaña *Status* conectada a la Shell anidada | ✅ todas las filas correctas |
+| Zip sin código de desarrollo | ✅ `extension.js` sin referencias a `dev/` y con sintaxis válida |
+| `smoke` | ✅ el servicio D-Bus se retira al desactivar; 0 fds de hidraw |
+| Permisos denegados y teclado no soportado | ⚠️ solo cubiertos por tests (no reproducibles sin quitar la regla udev u otro teclado ZSA) |
