@@ -4,8 +4,8 @@ A GNOME Shell extension that shows a floating overlay with the characters of the
 of your [ZSA Voyager](https://www.zsa.io/voyager). It is meant to help while you learn your
 layers: press a shortcut, or just hold a layer key, and see what every key does right now.
 
-> **Status:** early development (`0.0.x`). The extension skeleton loads, but it does not show an
-> overlay yet. See [the plan](docs/plan/) for the roadmap.
+> **Status:** early development (`0.0.x`). The core logic (protocol, layout, labels, geometry) is
+> in place, but the extension does not show an overlay yet. See [the plan](docs/plan/) for the roadmap.
 
 ## Requirements
 

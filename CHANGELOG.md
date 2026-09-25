@@ -7,6 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.2] - 2026-09-25
+
+### Added
+
+- Oryx raw HID protocol parser and read-only command builder (firmware version, protocol
+  version, pairing).
+- Layout normaliser that accepts both the Oryx GraphQL API response and Keymapp's cached
+  revisions.
+- US keycode label table and key label resolution: hold actions as secondary labels, custom
+  labels, one-shot modifiers, layer keys, RGB and system actions.
+- Voyager key geometry and matrix-to-key mapping, verified against QMK's `keyboard.json` and a
+  compiled Oryx keymap.
+- Visibility controller that combines the toggle shortcut with the automatic HUD and its show and
+  hide delays.
+
+### Changed
+
+- Transparent and empty keys inherit their label from the base layer.
+
 ## [0.0.1] - 2026-09-25
 
 ### Added
