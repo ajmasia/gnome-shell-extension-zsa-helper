@@ -55,20 +55,38 @@ app.connect('activate', () => {
     window.present();
 
     GLib.mkdir_with_parents(dir, 0o755);
-    GLib.timeout_add(GLib.PRIORITY_DEFAULT, 800, () => {
-        capture(window, `${dir}/prefs-default.png`);
+    const wait = (ms: number) =>
+        new Promise<void>(resolve =>
+            GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            }),
+        );
+
+    (async () => {
+        await wait(800);
+        for (const name of ['general', 'appearance', 'layout']) {
+            window.set_visible_page_name(name);
+            await wait(300);
+            capture(window, `${dir}/prefs-${name}.png`);
+        }
+
         settings.set_boolean('hud-enabled', false);
         settings.set_string('position', 'custom');
         settings.set_boolean('allow-dragging', true);
         settings.set_string('monitor', 'HDMI-9');
         settings.set_double('scale', 1.4);
         settings.set_strv('toggle-overlay', ['<Control><Shift>F12']);
-        GLib.timeout_add(GLib.PRIORITY_DEFAULT, 400, () => {
-            capture(window, `${dir}/prefs-changed.png`);
-            app.quit();
-            return GLib.SOURCE_REMOVE;
-        });
-        return GLib.SOURCE_REMOVE;
-    });
+        for (const name of ['general', 'appearance']) {
+            window.set_visible_page_name(name);
+            await wait(300);
+            capture(window, `${dir}/prefs-${name}-changed.png`);
+        }
+    })()
+        .catch(e => {
+            printerr(`probe-prefs failed: ${e}\n${e?.stack ?? ''}`);
+            System.exit(1);
+        })
+        .finally(() => app.quit());
 });
 app.run([]);
