@@ -29,6 +29,55 @@ layers: hold a layer key, or press a shortcut, and see what every key does right
 
 ![Pressed keys highlighted on the overlay](docs/images/overlay-pressed.png)
 
+## How it works
+
+```
+ ┌──────────────── ZSA Voyager (Oryx firmware) ─────────────────┐
+ │  raw HID channel (/dev/hidrawN, usage page 0xFF60)           │
+ └──────┬───────────────────────────────────────────────────────┘
+        │ 1. the extension asks for the protocol and firmware versions, then pairs
+        │ 2. the keyboard answers "aOa9o/nlzDl9" (flashed layout/revision)
+        │ 3. from then on it reports layer changes and key presses/releases (row, col)
+        ▼
+ ┌──────────────────────── Extension (GNOME Shell) ───────────────────────┐
+ │ device/   VoyagerDevice: finds, pairs and reconnects (USB, suspend)     │
+ │ layout/   LayoutService: loads the layout for the firmware's ids from   │
+ │             1) own cache        ~/.cache/zsa-helper/layouts/*.json      │
+ │             2) Oryx API         https://oryx.zsa.io/graphql (cached)    │
+ │             3) Keymapp's cache  ~/.config/.keymapp/keymapp.sqlite3      │
+ │ core/     pure, tested logic: protocol, labels, geometry, visibility,   │
+ │           positioning                                                   │
+ │ ui/       the overlay (a Shell St actor, not a window)                  │
+ │ extension.ts wires it up: layer → overlay, shortcut, HUD, settings      │
+ └───────▲─────────────────▲────────────────────▲─────────────────────────┘
+         │ Caps/Num Lock   │ monitors           │ settings (GSettings)
+   Clutter.Keymap    Mutter DisplayConfig    prefs.js (Adw window, separate process)
+```
+
+1. When it is enabled, the extension finds the keyboard and reads which layout and revision are
+   flashed on it.
+2. It loads that layout from its cache or from Oryx.
+3. While you hold a layer key, the firmware reports the layer change and the overlay draws that
+   layer with its labels.
+4. Key presses arrive as matrix positions and light up on the overlay.
+
+**Dependencies:**
+
+| Dependency | Required | What for |
+|---|---|---|
+| GNOME Shell 48 (Wayland) | Yes | Runs the extension |
+| Firmware built by Oryx | Yes | Provides the raw HID protocol and the layout id |
+| ZSA's udev rule (`50-zsa.rules`) | Yes | Read `/dev/hidraw*` without root. Keymapp installs it, or add it by hand |
+| Network | Only the first time per revision | Download the layout from the public Oryx API; the cache is used afterwards |
+| Keymapp | **No** | Can run at the same time: both read the same device without interfering. If it is installed, its database is an offline fallback |
+| `sqlite3` | No | Only to read that Keymapp fallback |
+
+**What it does not do:**
+
+- It never writes to the keyboard, apart from pairing: no layer switching, no RGB.
+- It does not need ZSA's app: it only uses the udev rule and, optionally, Keymapp's cache.
+- It does not modify your Oryx configuration: it only reads the layout, without authentication.
+
 ## Requirements
 
 - GNOME Shell 48 on Wayland.
