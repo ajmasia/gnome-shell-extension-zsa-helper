@@ -1,12 +1,14 @@
 /* Floating keyboard overlay. Sizes of keys and fonts are set from code to follow the scale. */
 
 .zsa-overlay {
-    background-color: rgba(22, 22, 26, 0.97);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
+    /* Matches an unfocused libadwaita window in GNOME 48 (window.csd:backdrop): window background,
+       15px radius, a 7% white outline and the main backdrop shadow layer. St supports only one
+       shadow, and the overlay never has focus. */
+    background-color: #222226;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 15px;
     padding: 12px 18px 18px;
-    /* Same shadow as the Shell's own floating switcher (.switcher-list in GNOME Shell 48). */
-    box-shadow: 0 8px 8px 0 rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 3px 3px rgba(0, 0, 0, 0.09);
 }
 
 .zsa-overlay-header {
