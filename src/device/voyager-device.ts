@@ -11,7 +11,7 @@ import {
 } from '../core/oryx/commands.js';
 import { parseOryxPacket } from '../core/oryx/parse.js';
 import { REPORT_SIZE } from '../core/oryx/types.js';
-import { findZsaRawHid } from './discovery.js';
+import { PermissionDeniedError, systemEnvironment, type DeviceEnvironment, type HidConnection } from './transport.js';
 
 export type DeviceState =
     | { status: 'stopped' }
@@ -29,12 +29,28 @@ export interface DeviceEvents extends Record<string, unknown> {
     warning: string;
 }
 
-/** Retry delays while no keyboard is found; the last one repeats. */
-const RETRY_DELAYS_MS = [1000, 2000, 5000, 10000];
-/** udev applies permissions shortly after the device node appears. */
-const HOTPLUG_SETTLE_MS = 500;
-/** USB needs a moment after resume before the keyboard accepts reports again. */
-const RESUME_SETTLE_MS = 1500;
+export interface DeviceTimings {
+    /** Retry delays while no keyboard is found; the last one repeats. */
+    retryDelaysMs: readonly number[];
+    /** udev applies permissions shortly after the device node appears. */
+    hotplugSettleMs: number;
+    /** USB needs a moment after resume before the keyboard accepts reports again. */
+    resumeSettleMs: number;
+}
+
+const DEFAULT_TIMINGS: DeviceTimings = {
+    retryDelaysMs: [1000, 2000, 5000, 10000],
+    hotplugSettleMs: 500,
+    resumeSettleMs: 1500,
+};
+
+export interface VoyagerDeviceOptions {
+    /** Receives exceptions thrown by event listeners; they never stop the device. */
+    onListenerError?: ListenerErrorHandler;
+    /** System access; replaced by a fake in tests. */
+    environment?: DeviceEnvironment;
+    timings?: Partial<DeviceTimings>;
+}
 
 /**
  * Connection to a ZSA keyboard over the Oryx raw HID protocol. It finds the device, pairs with
@@ -44,19 +60,20 @@ const RESUME_SETTLE_MS = 1500;
  * hidraw delivers every report to every reader.
  */
 export class VoyagerDevice extends Emitter<DeviceEvents> {
+    private readonly environment: DeviceEnvironment;
+    private readonly timings: DeviceTimings;
     private state: DeviceState = { status: 'stopped' };
     private cancellable: Gio.Cancellable | null = null;
-    private stream: Gio.FileIOStream | null = null;
-    private monitor: Gio.FileMonitor | null = null;
-    private monitorHandler = 0;
-    private sleepSubscription = 0;
+    private connection: HidConnection | null = null;
+    private unwatch: (() => void)[] = [];
     private retryTimer = 0;
     private retryAttempt = 0;
     private connecting = false;
 
-    /** `onListenerError` receives exceptions thrown by event listeners; they never stop the device. */
-    constructor(onListenerError?: ListenerErrorHandler) {
-        super(onListenerError);
+    constructor(options: VoyagerDeviceOptions = {}) {
+        super(options.onListenerError);
+        this.environment = options.environment ?? systemEnvironment;
+        this.timings = { ...DEFAULT_TIMINGS, ...options.timings };
     }
 
     get currentState(): DeviceState {
@@ -68,8 +85,10 @@ export class VoyagerDevice extends Emitter<DeviceEvents> {
             return;
         }
         this.cancellable = new Gio.Cancellable();
-        this.watchHotplug();
-        this.watchSleep();
+        this.unwatch = [
+            this.environment.watchHotplug(() => this.onHotplug()),
+            this.environment.watchResume(() => this.onResume()),
+        ];
         this.setState({ status: 'searching' });
         void this.connect();
     }
@@ -82,17 +101,11 @@ export class VoyagerDevice extends Emitter<DeviceEvents> {
         this.cancellable?.cancel();
         this.cancellable = null;
         this.clearRetry();
-        this.closeStream();
-
-        if (this.monitor) {
-            this.monitor.disconnect(this.monitorHandler);
-            this.monitor.cancel();
-            this.monitor = null;
+        this.closeConnection();
+        for (const unwatch of this.unwatch) {
+            unwatch();
         }
-        if (this.sleepSubscription) {
-            Gio.DBus.system.signal_unsubscribe(this.sleepSubscription);
-            this.sleepSubscription = 0;
-        }
+        this.unwatch = [];
         this.setState({ status: 'stopped' });
     }
 
@@ -105,7 +118,7 @@ export class VoyagerDevice extends Emitter<DeviceEvents> {
         const cancellable = this.cancellable;
 
         try {
-            const device = await findZsaRawHid(cancellable);
+            const device = await this.environment.find(cancellable);
             if (cancellable?.is_cancelled()) {
                 return;
             }
@@ -115,13 +128,11 @@ export class VoyagerDevice extends Emitter<DeviceEvents> {
                 return;
             }
 
+            let connection: HidConnection;
             try {
-                this.stream = await Gio.File.new_for_path(device.path).open_readwrite_async(
-                    GLib.PRIORITY_DEFAULT,
-                    cancellable,
-                );
+                connection = await this.environment.open(device.path, cancellable);
             } catch (e) {
-                if (e instanceof GLib.Error && e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.PERMISSION_DENIED)) {
+                if (e instanceof PermissionDeniedError) {
                     this.setState({
                         status: 'error',
                         reason: 'permission',
@@ -136,13 +147,14 @@ export class VoyagerDevice extends Emitter<DeviceEvents> {
 
             if (cancellable?.is_cancelled()) {
                 // stop() ran while the device was opening.
-                this.closeStream();
+                connection.close();
                 return;
             }
 
+            this.connection = connection;
             this.retryAttempt = 0;
             this.setState({ status: 'connected', path: device.path, name: device.name, productId: device.productId });
-            void this.readLoop(this.stream, cancellable);
+            void this.readLoop(connection, cancellable);
             await this.handshake();
         } catch (e) {
             if (isCancelled(e)) {
@@ -163,31 +175,26 @@ export class VoyagerDevice extends Emitter<DeviceEvents> {
     }
 
     private async send(report: Uint8Array): Promise<void> {
-        const output = this.stream?.get_output_stream();
-        if (!output) {
+        if (!this.connection) {
             return;
         }
-        // write_bytes_async keeps the data alive until the write completes; write_all_async with a
-        // plain Uint8Array may read the buffer after GJS has released it and send garbage.
-        const written = await output.write_bytes_async(new GLib.Bytes(report), GLib.PRIORITY_DEFAULT, this.cancellable);
+        const written = await this.connection.write(report, this.cancellable);
         if (written !== report.length) {
             throw new Error(`short write: ${written} of ${report.length} bytes`);
         }
     }
 
-    private async readLoop(stream: Gio.FileIOStream, cancellable: Gio.Cancellable | null): Promise<void> {
-        const input = stream.get_input_stream();
+    private async readLoop(connection: HidConnection, cancellable: Gio.Cancellable | null): Promise<void> {
         try {
             for (;;) {
-                const bytes = await input.read_bytes_async(REPORT_SIZE, GLib.PRIORITY_DEFAULT, cancellable);
-                const data = bytes.toArray();
+                const data = await connection.read(REPORT_SIZE, cancellable);
                 if (data.length === 0) {
                     throw new Error('end of stream');
                 }
                 this.handlePacket(data);
             }
         } catch (e) {
-            if (isCancelled(e) || stream !== this.stream) {
+            if (isCancelled(e) || connection !== this.connection) {
                 return;
             }
             this.disconnected();
@@ -222,7 +229,7 @@ export class VoyagerDevice extends Emitter<DeviceEvents> {
     }
 
     private disconnected(): void {
-        this.closeStream();
+        this.closeConnection();
         if (this.state.status === 'stopped') {
             return;
         }
@@ -230,19 +237,16 @@ export class VoyagerDevice extends Emitter<DeviceEvents> {
         this.scheduleRetry();
     }
 
-    private closeStream(): void {
-        const stream = this.stream;
-        this.stream = null;
-        try {
-            stream?.close(null);
-        } catch {
-            // Already gone with the device.
-        }
+    private closeConnection(): void {
+        const connection = this.connection;
+        this.connection = null;
+        connection?.close();
     }
 
     private scheduleRetry(delayMs?: number): void {
         this.clearRetry();
-        const delay = delayMs ?? RETRY_DELAYS_MS[Math.min(this.retryAttempt++, RETRY_DELAYS_MS.length - 1)]!;
+        const delays = this.timings.retryDelaysMs;
+        const delay = delayMs ?? delays[Math.min(this.retryAttempt++, delays.length - 1)]!;
         this.retryTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, delay, () => {
             this.retryTimer = 0;
             void this.connect();
@@ -257,54 +261,37 @@ export class VoyagerDevice extends Emitter<DeviceEvents> {
         }
     }
 
-    /** Reacts to hidraw nodes appearing in /dev (plugging in, reflashing, udev rule fixed). */
-    private watchHotplug(): void {
-        this.monitor = Gio.File.new_for_path('/dev').monitor_directory(Gio.FileMonitorFlags.NONE, null);
-        this.monitorHandler = this.monitor.connect('changed', (_monitor, file, _other, type) => {
-            const name = file.get_basename() ?? '';
-            if (!name.startsWith('hidraw') || this.state.status === 'connected') {
-                return;
-            }
-            if (type === Gio.FileMonitorEvent.CREATED || type === Gio.FileMonitorEvent.ATTRIBUTE_CHANGED) {
-                this.retryAttempt = 0;
-                this.scheduleRetry(HOTPLUG_SETTLE_MS);
-            }
-        });
+    /** A hidraw node appeared (plugging in, reflashing, udev rule fixed): try again soon. */
+    private onHotplug(): void {
+        if (this.state.status === 'connected' || this.state.status === 'stopped') {
+            return;
+        }
+        this.retryAttempt = 0;
+        this.scheduleRetry(this.timings.hotplugSettleMs);
     }
 
     /**
      * The firmware drops pairing when a report fails to send, e.g. while the USB bus is
      * suspended. After resume the device node may survive, so pair again explicitly.
      */
-    private watchSleep(): void {
-        this.sleepSubscription = Gio.DBus.system.signal_subscribe(
-            'org.freedesktop.login1',
-            'org.freedesktop.login1.Manager',
-            'PrepareForSleep',
-            '/org/freedesktop/login1',
-            null,
-            Gio.DBusSignalFlags.NONE,
-            (_connection, _sender, _path, _iface, _signal, params) => {
-                const [goingToSleep] = params.deepUnpack() as [boolean];
-                if (goingToSleep) {
-                    return;
-                }
-                this.clearRetry();
-                this.retryTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, RESUME_SETTLE_MS, () => {
-                    this.retryTimer = 0;
-                    if (this.state.status === 'connected') {
-                        this.handshake().catch(e => {
-                            if (!isCancelled(e)) {
-                                this.disconnected();
-                            }
-                        });
-                    } else {
-                        void this.connect();
+    private onResume(): void {
+        if (this.state.status === 'stopped') {
+            return;
+        }
+        this.clearRetry();
+        this.retryTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, this.timings.resumeSettleMs, () => {
+            this.retryTimer = 0;
+            if (this.state.status === 'connected') {
+                this.handshake().catch(e => {
+                    if (!isCancelled(e)) {
+                        this.disconnected();
                     }
-                    return GLib.SOURCE_REMOVE;
                 });
-            },
-        );
+            } else {
+                void this.connect();
+            }
+            return GLib.SOURCE_REMOVE;
+        });
     }
 
     private setState(state: DeviceState): void {
