@@ -7,6 +7,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.5] - 2026-09-25
+
+### Added
+
+- Floating keyboard overlay that shows the active layer with the Voyager's real geometry. It is
+  drawn by the Shell, not as a window: no title bar, not in Alt+Tab or the overview, and it never
+  takes focus or input.
+- Key labels:
+  - Hold actions shown as secondary labels.
+  - Keys inherited from the base layer dimmed.
+  - Distinct styles for layer, modifier and action keys.
+  - A colour swatch on keys that set an RGB colour.
+- `Super+Alt+K` toggles the overlay.
+- Automatic HUD: the overlay appears while a non-base layer is held and hides after returning to
+  the base layer, with show and hide delays.
+- Pressed keys are highlighted in their physical position.
+- Status messages when the keyboard is missing, the udev rule is not installed or the layout
+  cannot be loaded.
+- `pnpm nested --shots` captures the overlay for every layer. The smoke test also checks that
+  disabling the extension releases the keyboard.
+
 ## [0.0.4] - 2026-09-25
 
 ### Added
