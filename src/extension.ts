@@ -32,6 +32,7 @@ export default class ZsaHelperExtension extends Extension {
     private monitorsHandler = 0;
     private keymap: Clutter.Keymap | null = null;
     private keymapHandler = 0;
+    private appearanceIdle = 0;
     private overlay: KeyboardOverlay | null = null;
     private visibility: VisibilityController | null = null;
     private device: VoyagerDevice | null = null;
@@ -44,7 +45,11 @@ export default class ZsaHelperExtension extends Extension {
     enable(): void {
         this.debug = GLib.getenv('ZSA_HELPER_DEBUG') !== null;
         this.settings = this.getSettings();
-        this.overlay = new KeyboardOverlay();
+        this.overlay = new KeyboardOverlay(([x, y]) => {
+            // Store the dropped place and switch to it; applyAppearance() then keeps it there.
+            this.settings?.set_value('custom-position', new GLib.Variant('(dd)', [x, y]));
+            this.settings?.set_string('position', 'custom');
+        });
         this.visibility = new VisibilityController(this.visibilityConfig(), glibScheduler, visible =>
             this.overlay?.setVisible(visible),
         );
@@ -84,6 +89,10 @@ export default class ZsaHelperExtension extends Extension {
         }
         this.keymap = null;
         this.keymapHandler = 0;
+        if (this.appearanceIdle) {
+            GLib.Source.remove(this.appearanceIdle);
+            this.appearanceIdle = 0;
+        }
         for (const id of this.settingsHandlers) {
             this.settings?.disconnect(id);
         }
@@ -250,8 +259,8 @@ export default class ZsaHelperExtension extends Extension {
         for (const key of ['hud-enabled', 'hud-show-delay', 'hud-hide-delay']) {
             on(key, () => this.visibility?.setConfig(this.visibilityConfig()));
         }
-        for (const key of ['position', 'opacity', 'scale']) {
-            on(key, () => this.applyAppearance());
+        for (const key of ['position', 'opacity', 'scale', 'allow-dragging', 'custom-position']) {
+            on(key, () => this.scheduleAppearance());
         }
         on('refresh-requested', () => void this.loadLayout(true));
     }
@@ -265,12 +274,29 @@ export default class ZsaHelperExtension extends Extension {
         };
     }
 
+    /**
+     * Applies appearance changes once per main loop iteration. A drop writes both
+     * `custom-position` and `position`; applying each change alone would make the overlay jump.
+     */
+    private scheduleAppearance(): void {
+        if (this.appearanceIdle) {
+            return;
+        }
+        this.appearanceIdle = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+            this.appearanceIdle = 0;
+            this.applyAppearance();
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
     private applyAppearance(): void {
         const settings = this.settings!;
         this.overlay?.setAppearance({
             position: settings.get_string('position') as OverlayPosition,
             opacity: settings.get_double('opacity'),
             scale: settings.get_double('scale'),
+            custom: settings.get_value('custom-position').deepUnpack() as [number, number],
+            draggable: settings.get_boolean('allow-dragging'),
         });
     }
 }
