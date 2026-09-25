@@ -4,7 +4,7 @@ A GNOME Shell extension that shows a floating overlay with the characters of the
 of your [ZSA Voyager](https://www.zsa.io/voyager). It is meant to help while you learn your
 layers: hold a layer key, or press a shortcut, and see what every key does right now.
 
-> **Status:** `0.1.0`, the first complete version. See the [changelog](CHANGELOG.md).
+> **Status:** `0.2.0`. See the [changelog](CHANGELOG.md).
 
 ![The overlay showing the base layer](docs/images/overlay-main.png)
 
@@ -22,6 +22,8 @@ layers: hold a layer key, or press a shortcut, and see what every key does right
   through to the base layer are dimmed. Layer, modifier and system keys each have their own
   style, and your custom Oryx labels are kept.
 - **Key highlighting.** Every key you press lights up in its physical position.
+- **Lock indicators.** Caps Lock and Num Lock keys show a green LED while the lock is on.
+- **Movable.** Optionally drag the overlay anywhere; *Reset position* brings it back.
 
 ![Pressed keys highlighted on the overlay](docs/images/overlay-pressed.png)
 
@@ -66,7 +68,9 @@ gnome-extensions enable zsa-helper@ajmasia
 | Toggle shortcut | `Super+Alt+K` |
 | Show while a layer is held | On |
 | Show / hide delay | 150 ms / 300 ms |
-| Position | Bottom center |
+| Position | Bottom center (or *Custom* after dragging) |
+| Move by dragging | Off. When on, the overlay takes clicks so it can be dragged |
+| Reset position | Back to bottom center |
 | Opacity / size | 0.92 / 1.0 |
 | Highlight pressed keys | On |
 | Refresh layout | Downloads the flashed revision again, ignoring the cache |

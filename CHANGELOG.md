@@ -7,6 +7,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-25
+
+### Added
+
+- Lock keys show an LED in the corner while Caps Lock or Num Lock is on. The state comes from the
+  system, so it is reliable and also follows locks toggled from another keyboard.
+- The overlay can be dragged with the mouse. Enable *Move by dragging* in the preferences; only
+  then does the overlay take clicks.
+- The dragged place is kept as *Custom* position. It is stored relative to the work area, so it
+  survives resolution and scale changes, and *Reset position* restores the default.
+
 ## [0.1.0] - 2026-09-25
 
 First complete version.
