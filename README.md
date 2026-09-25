@@ -4,7 +4,7 @@ A GNOME Shell extension that shows a floating overlay with the characters of the
 of your [ZSA Voyager](https://www.zsa.io/voyager). It is meant to help while you learn your
 layers: hold a layer key, or press a shortcut, and see what every key does right now.
 
-> **Status:** `0.3.0`. See the [changelog](CHANGELOG.md).
+> **Status:** `0.4.0`. See the [changelog](CHANGELOG.md).
 
 ![The overlay showing the base layer](docs/images/overlay-main.png)
 
@@ -111,7 +111,8 @@ gnome-extensions enable zsa-helper@ajmasia
   base layer. It keeps showing the layer you were looking at while it fades out.
 - **`Super+Alt+K`:** pin or unpin the overlay.
 - **Preferences:** `gnome-extensions prefs zsa-helper@ajmasia`, or the Extensions app. They are
-  split into three tabs: General, Appearance and Layout.
+  split into three tabs: General, Appearance and Status. *Status* shows a live diagnosis of the
+  keyboard, permissions, firmware, layout and keyboard layout.
 
 ![Preferences](docs/images/preferences.png)
 
@@ -130,12 +131,15 @@ gnome-extensions enable zsa-helper@ajmasia
 
 ## Troubleshooting
 
+Start with the **Status** tab in the preferences: it shows what is detected and what is missing.
+
 | Message on the overlay | What to do |
 |---|---|
 | *Looking for your ZSA keyboard…* | Check the USB cable. The extension reconnects by itself when the keyboard appears. |
 | *No permission to read the keyboard* | Install ZSA's udev rule and replug the keyboard. |
 | *Layout not available* | The revision is not cached and Oryx is unreachable. Connect to the network, then use *Refresh layout*. |
 | *This firmware is not an Oryx layout* | The keyboard runs firmware not built by Oryx, so there is no layout to download. |
+| *… is not supported* | A ZSA keyboard other than the Voyager is connected; only the Voyager is supported. |
 
 Logs go to the journal: `journalctl --user -f -o cat /usr/bin/gnome-shell | grep zsa-helper`.
 

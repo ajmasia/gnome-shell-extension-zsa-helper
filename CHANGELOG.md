@@ -7,6 +7,32 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-25
+
+### Added
+
+- *Status* tab in the preferences with a live diagnosis:
+  - Keyboard connection, raw HID permissions (with a hint about ZSA's udev rule), Oryx protocol
+    version, firmware and loaded layout with its source.
+  - A warning when the GNOME keyboard layout is not US.
+  - The last unexpected error.
+- The extension publishes its status on the session bus
+  (`org.gnome.Shell.Extensions.ZsaHelper`), which is what the preferences read.
+- ZSA keyboards other than the Voyager are recognised and reported as not supported, instead of
+  failing with a misleading *Layout not available*.
+- README section explaining how the extension works and what it depends on.
+
+### Changed
+
+- The third preferences tab is now called *Status*. It holds the diagnosis, the layout refresh and
+  the version.
+
+### Fixed
+
+- Highlighted keys are cleared when the keyboard disconnects while a key is held.
+- The overlay follows work area changes, for example when a dock or panel resizes.
+- Development-only code is removed from the packaged extension.
+
 ## [0.3.0] - 2026-09-25
 
 ### Added
