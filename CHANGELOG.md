@@ -7,6 +7,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-25
+
+### Added
+
+- When the flashed layout revision cannot be loaded (for example, flashed while offline), the
+  overlay shows the last cached revision of the same layout instead of nothing. *Status* warns
+  about it, and the extension retries the right revision on reconnect, on *Refresh* and as soon as
+  the network comes back.
+- Automated tests for the GJS layer (`pnpm test:gjs`): the keyboard connection against a simulated
+  keyboard, and the layout service with its fallbacks. `pnpm typecheck` also checks them.
+- `pnpm nested --shots` measures the time from a layer change to the painted frame.
+
+### Changed
+
+- `VoyagerDevice` receives its system access (discovery, hidraw, hotplug and resume watching) by
+  injection, which is what makes it testable. The behaviour is unchanged.
+
 ## [0.4.1] - 2026-09-25
 
 ### Fixed

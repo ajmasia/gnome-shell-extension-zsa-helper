@@ -4,7 +4,7 @@ A GNOME Shell extension that shows a floating overlay with the characters of the
 of your [ZSA Voyager](https://www.zsa.io/voyager). It is meant to help while you learn your
 layers: hold a layer key, or press a shortcut, and see what every key does right now.
 
-> **Status:** `0.4.1`. See the [changelog](CHANGELOG.md).
+> **Status:** `0.5.0`. See the [changelog](CHANGELOG.md).
 
 ![The overlay showing the base layer](docs/images/overlay-main.png)
 
@@ -137,7 +137,7 @@ Start with the **Status** tab in the preferences: it shows what is detected and 
 |---|---|
 | *Looking for your ZSA keyboard…* | Check the USB cable. The extension reconnects by itself when the keyboard appears. |
 | *No permission to read the keyboard* | Install ZSA's udev rule and replug the keyboard. |
-| *Layout not available* | The revision is not cached and Oryx is unreachable. Connect to the network, then use *Refresh layout*. |
+| *Layout not available* | No revision of this layout is cached and Oryx is unreachable. Connect to the network, then use *Refresh layout*. If an older revision is cached, it is shown instead and *Status* warns about it. |
 | *This firmware is not an Oryx layout* | The keyboard runs firmware not built by Oryx, so there is no layout to download. |
 | *… is not supported* | A ZSA keyboard other than the Voyager is connected; only the Voyager is supported. |
 
@@ -159,7 +159,8 @@ pnpm build && pnpm run install:local   # symlink dist/ for development instead o
 |---|---|
 | `pnpm build` | Compile TypeScript to `dist/` and compile the GSettings schema |
 | `pnpm test` | Unit tests (Vitest) for the pure logic in `src/core/` |
-| `pnpm typecheck` | Type-check the extension against the GNOME Shell 48 typings, and the tests |
+| `pnpm test:gjs` | Tests for the GJS layer (keyboard connection, layout service) with a small built-in runner |
+| `pnpm typecheck` | Type-check the extension against the GNOME Shell 48 typings, and both test suites |
 | `pnpm nested` | Run a nested GNOME Shell with the extension enabled, without logging out |
 | `pnpm smoke` | Headless check: the extension enables and disables cleanly and releases the keyboard |
 | `pnpm nested --shots [dir]` | Capture the overlay for every layer to PNG files |
