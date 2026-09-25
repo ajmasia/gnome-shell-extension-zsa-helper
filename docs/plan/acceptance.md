@@ -172,3 +172,16 @@ Siguen pendientes de la v0.1.0: el criterio 8 (flasheo real).
 | Zip sin código de desarrollo | ✅ `extension.js` sin referencias a `dev/` y con sintaxis válida |
 | `smoke` | ✅ el servicio D-Bus se retira al desactivar; 0 fds de hidraw |
 | Permisos denegados y teclado no soportado | ⚠️ solo cubiertos por tests (no reproducibles sin quitar la regla udev u otro teclado ZSA) |
+
+## v0.4.1: robustez del emisor de eventos y de la lista de monitores
+
+**Fecha:** 2026-09-25
+**Resultado:** ✅ aprobada por el usuario
+
+| Comprobación | Resultado |
+|---|---|
+| Test de aislamiento de listeners | ✅ fallaba antes de la corrección y pasa después; 91 tests |
+| Listener que lanza una excepción con el teclado real | ✅ el error se registra, el resto de eventos llega y la conexión se mantiene (`searching → connected`, sin reconexiones) |
+| `DisplayConfig` forzado a fallar | ✅ 4 intentos (inicial y tres reintentos) y se detiene |
+| Multimonitor (`LVDS2`, dos monitores simulados) | ✅ sin regresión (x=1456) |
+| `smoke` | ✅ sin restos al desactivar |
