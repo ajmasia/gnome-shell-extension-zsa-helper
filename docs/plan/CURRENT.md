@@ -1,1 +1,1 @@
-See @docs/plan/phase-2-core-logic.md
+See @docs/plan/phase-3-device.md
