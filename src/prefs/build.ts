@@ -1,4 +1,5 @@
 import Adw from 'gi://Adw';
+import Gdk from 'gi://Gdk';
 import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk';
 import type { OverlayPosition } from '../core/positioning.js';
@@ -25,7 +26,7 @@ export function buildPreferences(window: Adw.PreferencesWindow, settings: Gio.Se
     page.add(appearanceGroup(settings));
     page.add(layoutGroup(settings, version));
     window.add(page);
-    window.set_default_size(620, 1000);
+    window.set_default_size(620, 1060);
 }
 
 function shortcutGroup(settings: Gio.Settings): Adw.PreferencesGroup {
@@ -76,6 +77,8 @@ function appearanceGroup(settings: Gio.Settings): Adw.PreferencesGroup {
     track(position, settings, 'position', syncPosition);
     group.add(position);
 
+    group.add(monitorRow(settings));
+
     const dragging = new Adw.SwitchRow({
         title: 'Move by dragging',
         subtitle: 'Drag the overlay with the mouse while it is shown. It then takes clicks instead of passing them through',
@@ -86,15 +89,17 @@ function appearanceGroup(settings: Gio.Settings): Adw.PreferencesGroup {
     const reset = new Adw.ActionRow({ title: 'Reset position', subtitle: 'Go back to the default place' });
     const resetButton = new Gtk.Button({ label: 'Reset', valign: Gtk.Align.CENTER });
     resetButton.connect('clicked', () => {
-        settings.reset('position');
-        settings.reset('custom-position');
+        for (const key of POSITION_KEYS) {
+            settings.reset(key);
+        }
     });
     const syncReset = () => {
-        resetButton.sensitive = settings.get_user_value('position') !== null || settings.get_user_value('custom-position') !== null;
+        resetButton.sensitive = POSITION_KEYS.some(key => settings.get_user_value(key) !== null);
     };
     syncReset();
-    track(resetButton, settings, 'position', syncReset);
-    track(resetButton, settings, 'custom-position', syncReset);
+    for (const key of POSITION_KEYS) {
+        track(resetButton, settings, key, syncReset);
+    }
     reset.add_suffix(resetButton);
     reset.activatable_widget = resetButton;
     group.add(reset);
@@ -106,6 +111,60 @@ function appearanceGroup(settings: Gio.Settings): Adw.PreferencesGroup {
     settings.bind('highlight-enabled', highlight, 'active', Gio.SettingsBindFlags.DEFAULT);
     group.add(highlight);
     return group;
+}
+
+/** Settings that *Reset position* restores. */
+const POSITION_KEYS = ['position', 'custom-position', 'monitor'];
+
+/**
+ * Chooses the monitor by connector. Lists the primary monitor, the connected monitors and, if
+ * the stored one is unplugged, that one too, so the choice is never lost silently.
+ */
+function monitorRow(settings: Gio.Settings): Adw.ComboRow {
+    const row = new Adw.ComboRow({ title: 'Monitor', subtitle: 'Dragging the overlay to another screen also changes it' });
+    const display = Gdk.Display.get_default();
+    let connectors: string[] = [];
+    let syncing = false;
+
+    const rebuild = () => {
+        const stored = settings.get_string('monitor');
+        const labels = ['Primary'];
+        connectors = [''];
+        const monitors = display?.get_monitors();
+        for (let i = 0; i < (monitors?.get_n_items() ?? 0); i++) {
+            const monitor = monitors!.get_item(i) as Gdk.Monitor;
+            const connector = monitor.get_connector();
+            if (!connector) {
+                continue;
+            }
+            connectors.push(connector);
+            labels.push(`${monitor.get_description() ?? connector} (${connector})`);
+        }
+        if (stored !== '' && !connectors.includes(stored)) {
+            connectors.push(stored);
+            labels.push(`${stored} (not connected)`);
+        }
+
+        syncing = true;
+        row.model = Gtk.StringList.new(labels);
+        row.selected = Math.max(0, connectors.indexOf(stored));
+        syncing = false;
+    };
+    rebuild();
+
+    row.connect('notify::selected', () => {
+        const connector = connectors[row.selected];
+        if (!syncing && connector !== undefined && connector !== settings.get_string('monitor')) {
+            settings.set_string('monitor', connector);
+        }
+    });
+    track(row, settings, 'monitor', rebuild);
+    const monitors = display?.get_monitors();
+    if (monitors) {
+        const handler = monitors.connect('items-changed', rebuild);
+        row.connect('destroy', () => monitors.disconnect(handler));
+    }
+    return row;
 }
 
 function layoutGroup(settings: Gio.Settings, version: string): Adw.PreferencesGroup {
