@@ -27,7 +27,10 @@ async function capture(overlay: KeyboardOverlay, path: string): Promise<void> {
     stream.close(null);
 }
 
-/** Shows each layer, then one layer with pressed keys, and writes `done` when finished. */
+/**
+ * Shows each layer, then the base layer with pressed keys and Caps Lock on, and writes `done` when
+ * finished.
+ */
 export async function captureLayers(overlay: KeyboardOverlay, layout: Layout, dir: string): Promise<void> {
     GLib.mkdir_with_parents(dir, 0o755);
     overlay.setVisible(true);
@@ -40,6 +43,7 @@ export async function captureLayers(overlay: KeyboardOverlay, layout: Layout, di
     overlay.showLayer(0);
     const pressed = [7, 13, 24, 51];
     pressed.forEach(i => overlay.pressKey(i));
+    overlay.setLockState({ caps: true, num: false });
     await wait(400);
     await capture(overlay, `${dir}/pressed.png`);
     pressed.forEach(i => overlay.releaseKey(i));
