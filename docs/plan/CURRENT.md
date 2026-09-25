@@ -1,2 +1,3 @@
-Plan completado: la v0.1.0 (MVP) está publicada y no hay ninguna fase activa.
-El registro de validaciones y las comprobaciones pendientes están en @docs/plan/acceptance.md.
+Plan completado: el MVP (v0.1.0) y las mejoras hasta la v0.4.1 están publicados. No hay ninguna fase activa.
+Mejoras pendientes, priorizadas: @docs/plan/BACKLOG.md
+Registro de validaciones y comprobaciones pendientes: @docs/plan/acceptance.md
