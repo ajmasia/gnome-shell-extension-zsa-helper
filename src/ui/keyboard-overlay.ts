@@ -68,6 +68,10 @@ export class KeyboardOverlay {
             visible: false,
             opacity: 0,
         });
+        // Without this, Clutter applies the opacity to every child separately: while fading, the
+        // translucent panel vanishes first and the keys linger on top of it. Painting offscreen
+        // makes the overlay fade (and stay translucent) as a single image.
+        this.actor.set_offscreen_redirect(Clutter.OffscreenRedirect.AUTOMATIC_FOR_OPACITY);
 
         const header = new St.BoxLayout({ style_class: 'zsa-overlay-header', reactive: false });
         this.dot = new St.Widget({ style_class: 'zsa-layer-dot', y_align: Clutter.ActorAlign.CENTER });
