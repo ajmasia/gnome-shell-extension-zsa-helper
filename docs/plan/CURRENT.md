@@ -1,1 +1,1 @@
-See @docs/plan/phase-5-overlay.md
+See @docs/plan/phase-6-preferences.md
