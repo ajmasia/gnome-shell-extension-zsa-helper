@@ -24,3 +24,9 @@ export function isZsaRawHid(uevent: string, reportDescriptor: Uint8Array): boole
 export function hidName(uevent: string): string | null {
     return /^HID_NAME=(.+)$/m.exec(uevent)?.[1] ?? null;
 }
+
+/** USB product id from a hidraw `uevent`, e.g. 0x1977 for the Voyager. */
+export function hidProductId(uevent: string): number | null {
+    const match = /^HID_ID=[0-9A-Fa-f]+:[0-9A-Fa-f]+:([0-9A-Fa-f]+)$/m.exec(uevent);
+    return match ? parseInt(match[1]!, 16) : null;
+}

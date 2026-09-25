@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hidName, isZsaRawHid } from '../src/core/oryx/hid-match.js';
+import { hidName, hidProductId, isZsaRawHid } from '../src/core/oryx/hid-match.js';
 
 // Real contents from /sys/class/hidraw/hidraw{3,4,5}/device on a Voyager.
 const VOYAGER_UEVENT = 'DRIVER=hid-generic\nHID_ID=0003:00003297:00001977\nHID_NAME=ZSA Technology Labs Voyager\n';
@@ -32,5 +32,12 @@ describe('hidName', () => {
     it('reads the product name', () => {
         expect(hidName(VOYAGER_UEVENT)).toBe('ZSA Technology Labs Voyager');
         expect(hidName('HID_ID=0003:00003297:00001977')).toBeNull();
+    });
+});
+
+describe('hidProductId', () => {
+    it('reads the product id', () => {
+        expect(hidProductId(VOYAGER_UEVENT)).toBe(0x1977);
+        expect(hidProductId('HID_NAME=nothing')).toBeNull();
     });
 });
