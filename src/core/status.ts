@@ -88,7 +88,15 @@ export function describeStatus(status: ExtensionStatus): StatusRow[] {
             rows.push({ title: 'Firmware', value: status.firmware, level: 'ok' });
         }
 
-        if (status.layout) {
+        if (status.layout?.source === 'stale-cache') {
+            const { title, layoutId, revisionId } = status.layout;
+            const flashed = status.firmware?.split('/')[1] ?? 'the flashed revision';
+            rows.push({
+                title: 'Layout',
+                value: `Showing ${title} (${layoutId}/${revisionId}) from the local cache: revision ${flashed} could not be loaded yet`,
+                level: 'warning',
+            });
+        } else if (status.layout) {
             const { title, layoutId, revisionId, source } = status.layout;
             rows.push({ title: 'Layout', value: `${title} (${layoutId}/${revisionId}) from ${sourceLabel(source)}`, level: 'ok' });
         } else if (status.layoutError) {

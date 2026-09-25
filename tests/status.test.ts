@@ -43,6 +43,15 @@ describe('describeStatus', () => {
         expect(levels({ ...connected, layout: null, layoutError: 'Oryx is unreachable' }).Layout).toBe('error');
     });
 
+    it('warns when an older cached revision is shown instead of the flashed one', () => {
+        const stale = { ...connected, firmware: 'aOa9o/newRev2', layout: { ...connected.layout!, source: 'stale-cache' } };
+        expect(describeStatus(stale).find(r => r.title === 'Layout')).toEqual({
+            title: 'Layout',
+            value: 'Showing Personal Settings (aOa9o/nlzDl9) from the local cache: revision newRev2 could not be loaded yet',
+            level: 'warning',
+        });
+    });
+
     it('shows pending steps while the keyboard answers', () => {
         const waiting = { ...connected, protocol: null, firmware: null, oryxFirmware: false, layout: null };
         expect(levels(waiting)).toMatchObject({ 'Oryx protocol': 'pending', Firmware: 'pending' });
