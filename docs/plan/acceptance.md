@@ -185,3 +185,19 @@ Siguen pendientes de la v0.1.0: el criterio 8 (flasheo real).
 | `DisplayConfig` forzado a fallar | ✅ 4 intentos (inicial y tres reintentos) y se detiene |
 | Multimonitor (`LVDS2`, dos monitores simulados) | ✅ sin regresión (x=1456) |
 | `smoke` | ✅ sin restos al desactivar |
+
+## v0.5.0: Phase 8 (robustez)
+
+**Fecha:** 2026-09-25
+**Resultado:** ✅ publicada por decisión del usuario; el flasheo real queda pendiente
+
+| Comprobación | Resultado |
+|---|---|
+| Tests de Vitest | ✅ 92 |
+| Tests GJS (`pnpm test:gjs`) | ✅ 17: 9 del dispositivo con teclado simulado, 7 del servicio de layout y 1 de la caché en disco |
+| Mutaciones (handshake invertido, sin aislamiento de listeners) | ✅ los tests correspondientes fallan (3) |
+| Dispositivo refactorizado con el teclado real | ✅ conecta, protocolo 5, firmware `aOa9o/nlzDl9` |
+| Último layout conocido con el sistema real | ✅ `probe:layout aOa9o newRev2 --offline` → `stale-cache`, revisión `nlzDl9` |
+| **Criterio 1: latencia** | ✅ cambio de capa → fotograma pintado: mediana 14,7 ms, máximo 22,3 ms (30 cambios, Shell anidada) |
+| **Criterio 8: flasheo real** | ⏳ pendiente; el usuario lo hará más adelante (pasos en `phase-8-robustness.md`) |
+| `smoke` | ✅ sin restos al desactivar |
