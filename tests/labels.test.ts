@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { resolveKeyLabel } from '../src/core/labels/resolve.js';
+import type { Key } from '../src/core/layout/model.js';
 import { realLayout } from './helpers.js';
 
 const layout = realLayout();
@@ -68,6 +69,19 @@ describe('resolveKeyLabel', () => {
         expect(label(BRD_SYS, 37)).toMatchObject({ main: '\\', inherited: true });
         expect(label(SYM, 0)).toMatchObject({ main: 'Esc', inherited: true });
         expect(label(NAV, 13)).toMatchObject({ main: 'A', sub: 'Super', inherited: false });
+    });
+
+    it('marks keys that toggle a host lock, also when inherited', () => {
+        expect(label(MAIN, 18)).toMatchObject({ main: 'Caps', lock: 'caps', inherited: false });
+        expect(label(NAV, 18)).toMatchObject({ main: 'Caps', lock: 'caps', inherited: true });
+        expect(label(MAIN, 7).lock).toBeUndefined();
+    });
+
+    it('marks Num Lock keys but not locks wrapped in modifiers', () => {
+        const withKeys = (keys: Key[]) => ({ ...layout, layers: [{ ...layout.layers[MAIN]!, keys }] });
+        expect(resolveKeyLabel(withKeys([{ tap: { code: 'KC_NUM_LOCK' } }]), 0, 0).lock).toBe('num');
+        const shifted = { code: 'KC_CAPS', modifiers: { ctrl: false, shift: true, alt: false, altGr: false, gui: false } };
+        expect(resolveKeyLabel(withKeys([{ tap: shifted }]), 0, 0).lock).toBeUndefined();
     });
 
     it('returns an empty label for transparent keys on the base layer', () => {

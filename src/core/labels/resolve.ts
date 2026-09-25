@@ -15,11 +15,24 @@ export interface KeyLabel {
     unknownCodes: string[];
     /** Colour the key sets (`RGB` keys), shown as a swatch. */
     color?: string;
+    /** Host lock this key toggles, so the overlay can show whether it is on. */
+    lock?: LockKind;
 }
+
+export type LockKind = 'caps' | 'num';
 
 const BASE_LAYER = 0;
 
 const TRANSPARENT_CODES = new Set(['KC_TRANSPARENT', 'KC_TRNS', '_______']);
+
+const LOCK_CODES: Readonly<Record<string, LockKind>> = {
+    KC_CAPS: 'caps',
+    KC_CAPS_LOCK: 'caps',
+    KC_CAPSLOCK: 'caps',
+    KC_NUM: 'num',
+    KC_NUM_LOCK: 'num',
+    KC_NUMLOCK: 'num',
+};
 const NO_CODES = new Set(['KC_NO', 'XXXXXXX']);
 
 const LAYER_ACTION_PREFIX: Readonly<Record<string, string>> = {
@@ -114,6 +127,11 @@ function resolveKey(layout: Layout, key: Key): KeyLabel {
     const color = key.tap?.code === 'RGB' ? key.tap.color : undefined;
     if (color) {
         label.color = color;
+    }
+    // Only a plain tap toggles the lock; with modifiers it is a different shortcut.
+    const lock = key.tap && !key.tap.modifiers ? LOCK_CODES[key.tap.code] : undefined;
+    if (lock) {
+        label.lock = lock;
     }
 
     if (secondary && secondary.text !== '' && secondary.text !== main) {

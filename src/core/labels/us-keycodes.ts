@@ -148,6 +148,7 @@ export const US_KEYCODE_LABELS: Readonly<Record<string, string>> = {
     KC_INS: 'Ins',
     KC_CAPS: 'Caps',
     KC_CAPS_LOCK: 'Caps',
+    KC_CAPSLOCK: 'Caps',
     KC_PSCR: 'PrtSc',
     KC_PRINT_SCREEN: 'PrtSc',
     KC_SCRL: 'ScrLk',
@@ -249,6 +250,7 @@ export const US_KEYCODE_LABELS: Readonly<Record<string, string>> = {
     KC_PEQL: '=',
     KC_NUM_LOCK: 'Num',
     KC_NUM: 'Num',
+    KC_NUMLOCK: 'Num',
 };
 
 /** Keycodes that are modifiers when used as a tap or hold action. */
