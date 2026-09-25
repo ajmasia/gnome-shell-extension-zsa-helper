@@ -1,1 +1,1 @@
-See @docs/plan/phase-1-setup.md
+See @docs/plan/phase-2-core-logic.md
