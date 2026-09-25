@@ -14,7 +14,8 @@
     "install:local": "bash scripts/install.sh",
     "nested": "bash scripts/nested.sh",
     "smoke": "bash scripts/nested.sh --smoke",
-    "probe:device": "pnpm build && gjs -m dist/dev/probe-device.js"
+    "probe:device": "pnpm build && gjs -m dist/dev/probe-device.js",
+    "probe:layout": "pnpm build >/dev/null && gjs -m dist/dev/probe-layout.js"
   },
   "devDependencies": {
     "@girs/gjs": "4.0.0-beta.36",
