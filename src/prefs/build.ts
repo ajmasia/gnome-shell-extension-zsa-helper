@@ -4,6 +4,7 @@ import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk';
 import type { OverlayPosition } from '../core/positioning.js';
 import { createShortcutRow } from './shortcut-row.js';
+import { createStatusGroup } from './status-group.js';
 
 const POSITIONS: [OverlayPosition, string][] = [
     ['bottom-center', 'Bottom center'],
@@ -23,7 +24,7 @@ export function buildPreferences(window: Adw.PreferencesWindow, settings: Gio.Se
     // With more than one page, Adwaita shows them as tabs in the header bar.
     window.add(page('General', 'input-keyboard-symbolic', [shortcutGroup(settings), hudGroup(settings), keysGroup(settings)]));
     window.add(page('Appearance', 'applications-graphics-symbolic', [positionGroup(settings), styleGroup(settings)]));
-    window.add(page('Layout', 'view-refresh-symbolic', [layoutGroup(settings, version)]));
+    window.add(page('Status', 'utilities-system-monitor-symbolic', [createStatusGroup(), layoutGroup(settings, version)]));
     window.set_default_size(620, 720);
 }
 
