@@ -1,7 +1,7 @@
 import GLib from 'gi://GLib';
 import Gio from '../lib/gio.js';
 import { isNotFound } from '../lib/errors.js';
-import { assertValidIds } from '../core/layout/oryx-query.js';
+import { assertValidIds, isValidHashId } from '../core/layout/oryx-query.js';
 
 /** Default location: ~/.cache/zsa-helper/layouts. */
 export function defaultCacheDir(): string {
@@ -70,6 +70,59 @@ export class LayoutCache {
             }
         }
         enumerator.close(null);
+    }
+
+    /**
+     * The most recently written revision of `layoutId` other than `excludeRevisionId`, used as a
+     * last known layout when the flashed revision cannot be loaded.
+     */
+    async latestFor(
+        layoutId: string,
+        excludeRevisionId: string,
+        cancellable: Gio.Cancellable | null,
+    ): Promise<{ revisionId: string; json: unknown } | null> {
+        const dir = Gio.File.new_for_path(this.dir);
+        let enumerator: Gio.FileEnumerator;
+        try {
+            enumerator = await dir.enumerate_children_async(
+                `${Gio.FILE_ATTRIBUTE_STANDARD_NAME},${Gio.FILE_ATTRIBUTE_TIME_MODIFIED}`,
+                Gio.FileQueryInfoFlags.NONE,
+                GLib.PRIORITY_DEFAULT,
+                cancellable,
+            );
+        } catch (e) {
+            if (isNotFound(e)) {
+                return null;
+            }
+            throw e;
+        }
+
+        const prefix = `${layoutId}-`;
+        let best: { revisionId: string; modified: number } | null = null;
+        for (;;) {
+            const infos = await enumerator.next_files_async(32, GLib.PRIORITY_DEFAULT, cancellable);
+            if (infos.length === 0) {
+                break;
+            }
+            for (const info of infos) {
+                const name = info.get_name();
+                if (!name.startsWith(prefix) || !name.endsWith('.json')) {
+                    continue;
+                }
+                const revisionId = name.slice(prefix.length, -'.json'.length);
+                const modified = info.get_attribute_uint64(Gio.FILE_ATTRIBUTE_TIME_MODIFIED);
+                if (revisionId !== excludeRevisionId && isValidHashId(revisionId) && (!best || modified > best.modified)) {
+                    best = { revisionId, modified };
+                }
+            }
+        }
+        enumerator.close(null);
+
+        if (!best) {
+            return null;
+        }
+        const json = await this.read(layoutId, best.revisionId, cancellable);
+        return json === null ? null : { revisionId: best.revisionId, json };
     }
 
     private file(layoutId: string, revisionId: string): Gio.File {

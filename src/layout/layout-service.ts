@@ -6,12 +6,36 @@ import { LayoutCache } from './cache.js';
 import { readFromKeymapp } from './keymapp-cache.js';
 import { OryxApiClient } from './oryx-api.js';
 
-export type LayoutSource = 'cache' | 'oryx-api' | 'keymapp';
+/** `stale-cache`: the flashed revision could not be loaded, so an older cached one is shown. */
+export type LayoutSource = 'cache' | 'oryx-api' | 'keymapp' | 'stale-cache';
 
 export interface LayoutResult {
     layout: Layout;
     source: LayoutSource;
+    /** Why earlier sources failed; useful when `source` is `stale-cache`. */
+    reasons: string[];
 }
+
+/** Downloads a revision; `OryxApiClient` in production. */
+export interface RevisionFetcher {
+    fetchRevision(layoutId: string, revisionId: string, cancellable: Gio.Cancellable | null): Promise<unknown>;
+    destroy(): void;
+}
+
+/** Stores raw revisions; `LayoutCache` in production. */
+export interface RevisionStore {
+    read(layoutId: string, revisionId: string, cancellable: Gio.Cancellable | null): Promise<unknown | null>;
+    write(layoutId: string, revisionId: string, json: unknown, cancellable: Gio.Cancellable | null): Promise<void>;
+    clear(cancellable: Gio.Cancellable | null): Promise<void>;
+    latestFor(
+        layoutId: string,
+        excludeRevisionId: string,
+        cancellable: Gio.Cancellable | null,
+    ): Promise<{ revisionId: string; json: unknown } | null>;
+}
+
+/** Reads a revision from Keymapp's cache; `readFromKeymapp` in production. */
+export type KeymappReader = (revisionId: string, cancellable: Gio.Cancellable | null) => Promise<unknown | null>;
 
 export class LayoutUnavailableError extends Error {
     constructor(
@@ -25,25 +49,26 @@ export class LayoutUnavailableError extends Error {
 }
 
 export interface LayoutServiceOptions {
-    api?: OryxApiClient;
-    cache?: LayoutCache;
-    keymappDb?: string;
+    api?: RevisionFetcher;
+    cache?: RevisionStore;
+    keymapp?: KeymappReader;
 }
 
 /**
  * Provides the layout flashed on the keyboard. Sources, in order: our own disk cache, the Oryx
- * API (the result is cached) and Keymapp's cache.
+ * API (the result is cached) and Keymapp's cache. If all of them fail, the most recent cached
+ * revision of the same layout is returned as `stale-cache`: an older layout beats no overlay.
  */
 export class LayoutService {
-    private readonly api: OryxApiClient;
-    private readonly cache: LayoutCache;
-    private readonly keymappDb: string | undefined;
+    private readonly api: RevisionFetcher;
+    private readonly cache: RevisionStore;
+    private readonly keymapp: KeymappReader;
     private cancellable = new Gio.Cancellable();
 
     constructor(options: LayoutServiceOptions = {}) {
         this.api = options.api ?? new OryxApiClient();
         this.cache = options.cache ?? new LayoutCache();
-        this.keymappDb = options.keymappDb;
+        this.keymapp = options.keymapp ?? ((revisionId, cancellable) => readFromKeymapp(revisionId, cancellable));
     }
 
     async get(layoutId: string, revisionId: string, { forceRefresh = false } = {}): Promise<LayoutResult> {
@@ -57,7 +82,7 @@ export class LayoutService {
                     reasons.push(`${source}: not found`);
                     return null;
                 }
-                return { layout: layoutFromOryxJson(json), source };
+                return { layout: layoutFromOryxJson(json), source, reasons };
             } catch (e) {
                 if (isCancelled(e)) {
                     throw e;
@@ -84,9 +109,17 @@ export class LayoutService {
             return fromApi;
         }
 
-        const fromKeymapp = await attempt('keymapp', () => readFromKeymapp(revisionId, cancellable, this.keymappDb));
+        const fromKeymapp = await attempt('keymapp', () => this.keymapp(revisionId, cancellable));
         if (fromKeymapp) {
             return fromKeymapp;
+        }
+
+        const stale = await attempt('stale-cache', async () => {
+            const latest = await this.cache.latestFor(layoutId, revisionId, cancellable);
+            return latest?.json ?? null;
+        });
+        if (stale) {
+            return stale;
         }
 
         throw new LayoutUnavailableError(layoutId, revisionId, reasons);
