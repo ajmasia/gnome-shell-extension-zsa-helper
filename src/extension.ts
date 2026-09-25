@@ -58,7 +58,10 @@ export default class ZsaHelperExtension extends Extension {
             this.settings,
             Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
             Shell.ActionMode.ALL,
-            () => this.visibility?.onToggle(),
+            () => {
+                this.visibility?.onToggle();
+                this.overlay?.flushLayer();
+            },
         );
 
         this.device.start();
@@ -105,8 +108,9 @@ export default class ZsaHelperExtension extends Extension {
             }
         });
         device.on('layer', layer => {
-            this.overlay?.showLayer(layer);
             this.visibility?.onLayer(layer);
+            // Keep the layer being previewed while the HUD fades out instead of flashing the base.
+            this.overlay?.showLayer(layer, { defer: this.visibility?.hidingToBase ?? false });
         });
         device.on('keydown', ({ row, col }) => {
             const index = matrixToOryxIndex(row, col);

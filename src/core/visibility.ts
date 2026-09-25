@@ -38,6 +38,14 @@ export class VisibilityController {
         return this.pinned || this.hudVisible;
     }
 
+    /**
+     * True while the HUD waits to hide after returning to the base layer. The overlay should keep
+     * showing the previous layer meanwhile instead of flashing the base layer before it fades out.
+     */
+    get hidingToBase(): boolean {
+        return this.hideTimer !== null && !this.pinned;
+    }
+
     onLayer(layer: number): void {
         this.layer = layer;
         if (!this.config.hudEnabled) {

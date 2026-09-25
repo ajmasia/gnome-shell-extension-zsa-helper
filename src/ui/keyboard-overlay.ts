@@ -35,6 +35,7 @@ export class KeyboardOverlay {
     private layer = 0;
     private appearance: OverlayAppearance = { position: 'bottom-center', opacity: 0.92, scale: 1 };
     private shown = false;
+    private stale = false;
 
     constructor() {
         this.actor = new St.BoxLayout({
@@ -74,9 +75,25 @@ export class KeyboardOverlay {
         this.render();
     }
 
-    showLayer(layer: number): void {
+    /**
+     * Switches the layer shown. With `defer`, or while the overlay is hidden or fading out, the
+     * change is only rendered the next time the overlay shows (or on `flushLayer()`), so a
+     * closing overlay never flashes another layer.
+     */
+    showLayer(layer: number, { defer = false } = {}): void {
         this.layer = layer;
+        if (defer || !this.shown) {
+            this.stale = true;
+            return;
+        }
         this.render();
+    }
+
+    /** Renders a deferred layer change right away. */
+    flushLayer(): void {
+        if (this.stale) {
+            this.render();
+        }
     }
 
     /** A message shown instead of the keys, e.g. when the keyboard is not connected. */
@@ -117,6 +134,7 @@ export class KeyboardOverlay {
         this.actor.remove_all_transitions();
 
         if (visible) {
+            this.flushLayer();
             this.reposition();
             this.actor.show();
             this.actor.ease({
@@ -159,6 +177,7 @@ export class KeyboardOverlay {
         if (!layout || this.status.visible) {
             return;
         }
+        this.stale = false;
         const layer = layout.layers.find(l => l.index === this.layer) ?? layout.layers[0]!;
         this.title.text = layer.title;
         this.dot.visible = layer.color !== undefined;

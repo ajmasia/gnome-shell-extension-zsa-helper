@@ -112,6 +112,29 @@ describe('VisibilityController', () => {
         expect(changes).toEqual([true]);
     });
 
+    it('reports when it is hiding back to the base layer', () => {
+        const { controller } = setup();
+        controller.onLayer(2);
+        vi.advanceTimersByTime(200);
+        expect(controller.hidingToBase).toBe(false);
+        controller.onLayer(0);
+        expect(controller.hidingToBase).toBe(true);
+        vi.advanceTimersByTime(300);
+        expect(controller.hidingToBase).toBe(false);
+    });
+
+    it('is not hiding to base when pinned or when the layer comes back', () => {
+        const { controller } = setup();
+        controller.onLayer(2);
+        vi.advanceTimersByTime(200);
+        controller.onLayer(0);
+        controller.onLayer(1);
+        expect(controller.hidingToBase).toBe(false);
+        controller.onLayer(0);
+        controller.onToggle();
+        expect(controller.hidingToBase).toBe(false);
+    });
+
     it('cancels pending timers on destroy', () => {
         const { controller, changes } = setup();
         controller.onLayer(2);
