@@ -82,3 +82,17 @@ a la tecla.
 
 **Ajuste tras la revisión:** el overlay mantiene la capa consultada mientras se oculta, en lugar de
 mostrar la base antes de desaparecer.
+
+## v0.0.6: Phase 6 (preferencias)
+
+**Fecha:** 2026-09-25
+**Resultado:** ✅ aprobada por el usuario
+
+| Comprobación | Resultado |
+|---|---|
+| `pnpm test` / `typecheck` | ✅ 62 tests |
+| `pnpm probe:prefs` | ✅ los cambios en los ajustes se reflejan en la interfaz (atajo, HUD, posición, tamaño) |
+| `prefs.js` en la app Extensiones (Shell anidada) | ✅ carga sin errores |
+| Captura y restauración del atajo | ✅ validado por el usuario |
+| Controles → ajustes aplicados en caliente | ✅ validado por el usuario |
+| Refrescar layout | ✅ validado por el usuario |
