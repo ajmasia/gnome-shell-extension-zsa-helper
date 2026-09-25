@@ -2,9 +2,11 @@
 
 **Goal:** una extensión TypeScript vacía compila, se instala y se activa y desactiva sin errores en
 una Shell anidada de GNOME 48. Los tests (todavía vacíos) corren con Vitest.
-**Verification:** `pnpm build && pnpm test && pnpm run install:local && gnome-extensions info zsa-helper@ajmasia`
-(y a mano: `pnpm nested`, activar con `gnome-extensions enable zsa-helper@ajmasia` dentro de la
-Shell anidada, sin errores en el log).
+**Verification:** `pnpm build && pnpm test && pnpm typecheck && pnpm smoke`. `pnpm smoke` arranca
+una Shell anidada con dconf aislado (`~/.config/dconf/zsa_helper_nested`), comprueba que la
+extensión pasa a ACTIVE y después a INACTIVE, y muestra sus logs y los errores de JS.
+`gnome-extensions info` en la sesión real no sirve: Wayland no detecta extensiones nuevas hasta
+volver a iniciar sesión.
 **Dependencies:** ninguna.
 
 ## Contexto
