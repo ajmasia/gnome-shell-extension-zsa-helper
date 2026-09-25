@@ -2,8 +2,10 @@
   "uuid": "zsa-helper@ajmasia",
   "name": "ZSA Helper",
   "description": "Floating overlay that shows the active layer of your ZSA Voyager keyboard.",
-  "shell-version": ["48"],
+  "shell-version": [
+    "48"
+  ],
   "settings-schema": "org.gnome.shell.extensions.zsa-helper",
-  "version-name": "0.0.0",
+  "version-name": "0.0.1",
   "url": ""
 }
