@@ -13,6 +13,7 @@ import { VisibilityController, type Scheduler } from './core/visibility.js';
 import { VoyagerDevice, type DeviceState } from './device/voyager-device.js';
 import { LayoutService, LayoutUnavailableError } from './layout/layout-service.js';
 import { OryxApiClient } from './layout/oryx-api.js';
+import { MonitorDirectory } from './lib/monitors.js';
 import { KeyboardOverlay } from './ui/keyboard-overlay.js';
 
 const TOGGLE_KEY = 'toggle-overlay';
@@ -37,6 +38,7 @@ export default class ZsaHelperExtension extends Extension {
     private visibility: VisibilityController | null = null;
     private device: VoyagerDevice | null = null;
     private layouts: LayoutService | null = null;
+    private monitors: MonitorDirectory | null = null;
     private firmware: { layoutId: string; revisionId: string } | null = null;
     private layoutRequest = 0;
     private hasLayout = false;
@@ -45,8 +47,11 @@ export default class ZsaHelperExtension extends Extension {
     enable(): void {
         this.debug = GLib.getenv('ZSA_HELPER_DEBUG') !== null;
         this.settings = this.getSettings();
-        this.overlay = new KeyboardOverlay(([x, y]) => {
-            // Store the dropped place and switch to it; applyAppearance() then keeps it there.
+        this.monitors = new MonitorDirectory();
+        this.overlay = new KeyboardOverlay(([x, y], monitor) => {
+            // Store the dropped monitor and place and switch to them; applyAppearance() then keeps
+            // the overlay there.
+            this.settings?.set_string('monitor', this.monitors?.connectorFor(monitor) ?? '');
             this.settings?.set_value('custom-position', new GLib.Variant('(dd)', [x, y]));
             this.settings?.set_string('position', 'custom');
         });
@@ -62,7 +67,8 @@ export default class ZsaHelperExtension extends Extension {
         this.connectDevice(this.device);
         this.connectSettings(this.settings);
 
-        this.monitorsHandler = Main.layoutManager.connect('monitors-changed', () => this.overlay?.relayout());
+        this.monitorsHandler = Main.layoutManager.connect('monitors-changed', () => this.onMonitorsChanged());
+        this.onMonitorsChanged();
         this.watchLocks();
         Main.wm.addKeybinding(
             TOGGLE_KEY,
@@ -101,6 +107,8 @@ export default class ZsaHelperExtension extends Extension {
         this.device?.stop();
         this.device?.clear();
         this.device = null;
+        this.monitors?.destroy();
+        this.monitors = null;
         this.layouts?.destroy();
         this.layouts = null;
         this.visibility?.destroy();
@@ -259,7 +267,7 @@ export default class ZsaHelperExtension extends Extension {
         for (const key of ['hud-enabled', 'hud-show-delay', 'hud-hide-delay']) {
             on(key, () => this.visibility?.setConfig(this.visibilityConfig()));
         }
-        for (const key of ['position', 'opacity', 'scale', 'allow-dragging', 'custom-position']) {
+        for (const key of ['position', 'opacity', 'scale', 'allow-dragging', 'custom-position', 'monitor']) {
             on(key, () => this.scheduleAppearance());
         }
         on('refresh-requested', () => void this.loadLayout(true));
@@ -272,6 +280,20 @@ export default class ZsaHelperExtension extends Extension {
             showDelayMs: settings.get_uint('hud-show-delay'),
             hideDelayMs: settings.get_uint('hud-hide-delay'),
         };
+    }
+
+    /**
+     * Monitor indices shift when screens come and go: reload the connectors, then place the
+     * overlay again on the chosen monitor (or the primary while it is unplugged).
+     */
+    private onMonitorsChanged(): void {
+        this.overlay?.relayout();
+        const monitors = this.monitors;
+        monitors?.refresh().then(() => {
+            if (monitors === this.monitors) {
+                this.scheduleAppearance();
+            }
+        });
     }
 
     /**
@@ -297,6 +319,7 @@ export default class ZsaHelperExtension extends Extension {
             scale: settings.get_double('scale'),
             custom: settings.get_value('custom-position').deepUnpack() as [number, number],
             draggable: settings.get_boolean('allow-dragging'),
+            monitor: this.monitors?.indexFor(settings.get_string('monitor')) ?? -1,
         });
     }
 }
