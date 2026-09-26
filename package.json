@@ -6,6 +6,14 @@
   "private": true,
   "license": "GPL-3.0-or-later",
   "author": "Antonio Masiá <ajmasia.dev@ysnp.link>",
+  "homepage": "https://github.com/ajmasia/gnome-shell-extension-zsa-helper",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ajmasia/gnome-shell-extension-zsa-helper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ajmasia/gnome-shell-extension-zsa-helper/issues"
+  },
   "scripts": {
     "build": "tsc && node scripts/copy-assets.mjs",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json && tsc -p tsconfig.gjs-tests.json --noEmit",
