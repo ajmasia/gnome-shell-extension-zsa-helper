@@ -6,6 +6,6 @@
     "48"
   ],
   "settings-schema": "org.gnome.shell.extensions.zsa-helper",
-  "version-name": "0.5.0",
+  "version-name": "0.5.1",
   "url": "https://github.com/ajmasia/gnome-shell-extension-zsa-helper"
 }

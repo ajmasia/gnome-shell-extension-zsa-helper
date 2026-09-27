@@ -1,10 +1,20 @@
 # ZSA Helper
 
+[![Version](https://img.shields.io/github/v/tag/ajmasia/gnome-shell-extension-zsa-helper?sort=semver&label=version)](CHANGELOG.md)
+[![License: GPL-3.0-or-later](https://img.shields.io/github/license/ajmasia/gnome-shell-extension-zsa-helper)](LICENSE)
+[![GNOME Shell 48](https://img.shields.io/badge/GNOME_Shell-48-4A86CF?logo=gnome&logoColor=white)](https://extensions.gnome.org)
+[![Wayland](https://img.shields.io/badge/Wayland-supported-FFBC00?logo=wayland&logoColor=black)](https://wayland.freedesktop.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](tsconfig.json)
+[![GJS](https://img.shields.io/badge/GJS-ES_modules-F7DF1E?logo=javascript&logoColor=black)](https://gjs.guide)
+[![Tests](https://img.shields.io/badge/tests-Vitest_%2B_GJS-6E9F18?logo=vitest&logoColor=white)](#development)
+[![ZSA Voyager](https://img.shields.io/badge/keyboard-ZSA_Voyager-1a1a1a)](https://www.zsa.io/voyager)
+[![Last commit](https://img.shields.io/github/last-commit/ajmasia/gnome-shell-extension-zsa-helper)](https://github.com/ajmasia/gnome-shell-extension-zsa-helper/commits/main)
+
 A GNOME Shell extension that shows a floating overlay with the characters of the **active layer**
 of your [ZSA Voyager](https://www.zsa.io/voyager). It is meant to help while you learn your
 layers: hold a layer key, or press a shortcut, and see what every key does right now.
 
-> **Status:** `0.5.0`. See the [changelog](CHANGELOG.md).
+> **Status:** `0.5.1`. See the [changelog](CHANGELOG.md).
 
 ![The overlay showing the base layer](docs/images/overlay-main.png)
 

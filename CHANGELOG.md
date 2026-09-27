@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-09-27
+
+### Added
+
+- The extension links to its public repository, which the Extensions app shows.
+- README badges: version, license, GNOME Shell and Wayland support, languages, tests, supported
+  keyboard and last commit.
+
 ## [0.5.0] - 2026-09-25
 
 ### Added
