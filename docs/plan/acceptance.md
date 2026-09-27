@@ -213,3 +213,19 @@ Siguen pendientes de la v0.1.0: el criterio 8 (flasheo real).
 | Badges del README | ✅ las 9 URLs responden; los dinámicos muestran versión, licencia (GPL-3.0) y último commit |
 | Firmas en GitHub | ✅ commits y etiquetas verificados tras registrar la clave de firma |
 | `pnpm test` / `test:gjs` / `typecheck` / `smoke` | ✅ sin regresiones |
+
+## Criterio 8: flasheo real (cierre)
+
+**Fecha:** 2026-09-27
+**Resultado:** ✅ validado por el usuario en la sesión real con la v0.5.1
+
+El usuario cambió Enter a *tap* = `Enter` / *hold* = `Right Alt` en Oryx y flasheó el teclado. Al
+reconectarse, la extensión cargó sola la revisión nueva, sin intervención:
+
+| Comprobación | Resultado |
+|---|---|
+| Journal a las 23:55:43 | ✅ `connected to ZSA Technology Labs Voyager` y `layout aOa9o/m57X6V "Personal Settings" from oryx-api` (antes `nlzDl9` desde la caché) |
+| Revisión nueva en caché | ✅ `~/.cache/zsa-helper/layouts/aOa9o-m57X6V.json`, con Enter = `KC_ENTER` / hold `KC_RIGHT_ALT` |
+| Overlay y *Status* | ✅ validados por el usuario |
+
+Con esto, los 11 criterios del PRD quedan en ✅.
