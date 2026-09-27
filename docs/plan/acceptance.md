@@ -201,3 +201,15 @@ Siguen pendientes de la v0.1.0: el criterio 8 (flasheo real).
 | **Criterio 1: latencia** | ✅ cambio de capa → fotograma pintado: mediana 14,7 ms, máximo 22,3 ms (30 cambios, Shell anidada) |
 | **Criterio 8: flasheo real** | ⏳ pendiente; el usuario lo hará más adelante (pasos en `phase-8-robustness.md`) |
 | `smoke` | ✅ sin restos al desactivar |
+
+## v0.5.1: repositorio público y badges
+
+**Fecha:** 2026-09-27
+**Resultado:** ✅ solicitada por el usuario
+
+| Comprobación | Resultado |
+|---|---|
+| URL del repositorio en `metadata.json` y `package.json` | ✅ `https://github.com/ajmasia/gnome-shell-extension-zsa-helper` |
+| Badges del README | ✅ las 9 URLs responden; los dinámicos muestran versión, licencia (GPL-3.0) y último commit |
+| Firmas en GitHub | ✅ commits y etiquetas verificados tras registrar la clave de firma |
+| `pnpm test` / `test:gjs` / `typecheck` / `smoke` | ✅ sin regresiones |
