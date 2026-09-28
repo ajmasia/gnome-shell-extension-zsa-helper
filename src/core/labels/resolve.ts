@@ -47,8 +47,8 @@ const LAYER_ACTION_PREFIX: Readonly<Record<string, string>> = {
 
 const ACTION_LABELS: Readonly<Record<string, string>> = {
     CW_TOGG: 'CapsW',
-    QK_BOOT: 'Boot',
-    QK_BOOTLOADER: 'Boot',
+    QK_BOOT: 'Flash',
+    QK_BOOTLOADER: 'Flash',
     TOGGLE_LAYER_COLOR: 'Layer Color',
     RGB: 'Color',
     RGB_TOG: 'RGB ⏻',
