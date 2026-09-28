@@ -229,3 +229,13 @@ reconectarse, la extensión cargó sola la revisión nueva, sin intervención:
 | Overlay y *Status* | ✅ validados por el usuario |
 
 Con esto, los 11 criterios del PRD quedan en ✅.
+
+## v0.5.2: etiqueta Flash para la tecla de bootloader
+
+**Fecha:** 2026-09-28
+**Resultado:** ✅ solicitada por el usuario
+
+| Comprobación | Resultado |
+|---|---|
+| `QK_BOOT` / `QK_BOOTLOADER` se muestran como `Flash` | ✅ test de etiquetas y captura de la capa Brd+Sys |
+| `pnpm test` / `test:gjs` / `typecheck` / `smoke` | ✅ sin regresiones |
