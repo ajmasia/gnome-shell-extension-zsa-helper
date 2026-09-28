@@ -7,6 +7,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-09-28
+
+### Changed
+
+- The bootloader key (`QK_BOOT`, *Reset* in Oryx) is labelled *Flash* instead of *Boot*, which is
+  what it is for: putting the keyboard in flashing mode. It does not erase the layout.
+
 ## [0.5.1] - 2026-09-27
 
 ### Added
